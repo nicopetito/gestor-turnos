@@ -3,6 +3,7 @@ import { addDays, parseISO, startOfDay } from 'date-fns';
 import { createServerSupabase } from '@/lib/supabase/server';
 import { timeToMinutes, minutesToTime } from '@/lib/slots';
 import { notifyBookingConfirmed } from '@/lib/notifications';
+import { writeBookingToSheet } from '@/lib/sheets';
 import type { CreateBookingBody, Duration } from '@/types';
 
 const VALID_DURATIONS: Duration[] = [60, 90, 120];
@@ -223,10 +224,23 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Error al crear la reserva' }, { status: 500 });
   }
 
+  // Fetch court name for notifications and sheets
+  const { data: court } = await supabase.from('courts').select('name').eq('id', court_id).single();
+  const courtName = court?.name ?? `Cancha ${court_id}`;
+
+  // Update Google Sheets (non-blocking)
+  writeBookingToSheet({
+    date,
+    start_time: booking.start_time,
+    end_time: booking.end_time,
+    duration_minutes,
+    court_name: courtName,
+    user_name: user.name,
+    phone: phone.trim(),
+  }).catch((err) => console.error('[sheets] writeBookingToSheet error:', err));
+
   // Send email confirmation (non-blocking — never fails the request)
   if (user.email) {
-    const { data: court } = await supabase.from('courts').select('name').eq('id', court_id).single();
-    const courtName = court?.name ?? `Cancha ${court_id}`;
     notifyBookingConfirmed({
       name:            user.name,
       email:           user.email,
@@ -237,6 +251,7 @@ export async function POST(request: NextRequest) {
       durationMinutes: duration_minutes,
     });
   }
+
 
   return NextResponse.json({ booking }, { status: 201 });
 }

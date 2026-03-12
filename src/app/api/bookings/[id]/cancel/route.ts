@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { differenceInHours, parseISO } from 'date-fns';
 import { createServerSupabase } from '@/lib/supabase/server';
 import { notifyBookingCancelled } from '@/lib/notifications';
+import { clearBookingFromSheet } from '@/lib/sheets';
 import type { CancelBookingBody } from '@/types';
 
 /**
@@ -70,6 +71,14 @@ export async function POST(
   if (updateErr) {
     return NextResponse.json({ error: 'Error al cancelar la reserva' }, { status: 500 });
   }
+
+  // Update Google Sheets (non-blocking)
+  clearBookingFromSheet({
+    date: booking.date,
+    start_time: booking.start_time,
+    duration_minutes: booking.duration_minutes,
+    court_name: booking.courts?.name ?? '',
+  }).catch((err) => console.error('[sheets] clearBookingFromSheet error:', err));
 
   // Send email notification (non-blocking)
   if (booking.users?.email) {

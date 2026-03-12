@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabase } from '@/lib/supabase/server';
+import { clearBookingFromSheet } from '@/lib/sheets';
 
 /**
  * GET /api/admin/bookings?adminKey=KEY&date=YYYY-MM-DD
@@ -46,6 +47,12 @@ export async function DELETE(request: NextRequest) {
 
   const supabase = await createServerSupabase();
 
+  const { data: booking } = await supabase
+    .from('bookings')
+    .select('date, start_time, duration_minutes, courts(name)')
+    .eq('id', bookingId)
+    .single();
+
   const { error } = await supabase
     .from('bookings')
     .update({ status: 'cancelled', cancelled_at: new Date().toISOString() })
@@ -53,6 +60,15 @@ export async function DELETE(request: NextRequest) {
 
   if (error) {
     return NextResponse.json({ error: 'Error al cancelar la reserva' }, { status: 500 });
+  }
+
+  if (booking) {
+    clearBookingFromSheet({
+      date: booking.date,
+      start_time: booking.start_time,
+      duration_minutes: booking.duration_minutes,
+      court_name: (Array.isArray(booking.courts) ? booking.courts[0]?.name : (booking.courts as { name: string } | null)?.name) ?? '',
+    }).catch((err) => console.error('[sheets] clearBookingFromSheet error:', err));
   }
 
   return NextResponse.json({ message: 'Reserva cancelada por admin' });
