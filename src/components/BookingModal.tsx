@@ -148,7 +148,7 @@ export default function BookingModal({
             <div className="flex flex-col gap-2 pt-1">
               <button
                 onClick={() => router.push(`/mis-reservas?phone=${encodeURIComponent(phone)}`)}
-                className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5 rounded-xl text-sm transition-colors"
+                className="w-full bg-green-700 hover:bg-green-800 text-white font-medium py-2.5 rounded-xl text-sm transition-colors"
               >
                 Ver mis reservas
               </button>
@@ -180,7 +180,7 @@ export default function BookingModal({
               <button
                 type="button"
                 onClick={() => { setStep(1); setError(null); }}
-                className="text-xs text-blue-600 hover:underline mt-0.5"
+                className="text-xs text-green-700 hover:underline mt-0.5"
               >
                 ← Volver a duración
               </button>
@@ -204,19 +204,19 @@ export default function BookingModal({
                 key={s}
                 className={[
                   'h-1.5 rounded-full transition-all',
-                  step >= s ? 'w-8 bg-blue-500' : 'w-4 bg-gray-200',
+                  step >= s ? 'w-8 bg-green-600' : 'w-4 bg-gray-200',
                 ].join(' ')}
               />
             ))}
           </div>
 
           {/* Slot summary */}
-          <div className="bg-blue-50 border border-blue-100 rounded-xl p-4 text-sm text-blue-900 space-y-1">
+          <div className="bg-green-50 border border-green-100 rounded-xl p-4 text-sm text-green-900 space-y-1">
             <p className="font-semibold capitalize">{dateLabel}</p>
             <p>{courtName}</p>
             <p>
               {slot.time} – {endTime}
-              <span className="ml-2 text-blue-500 text-xs">({duration} min)</span>
+              <span className="ml-2 text-green-600 text-xs">({duration} min)</span>
             </p>
           </div>
 
@@ -239,8 +239,8 @@ export default function BookingModal({
                         !available
                           ? 'opacity-40 cursor-not-allowed bg-gray-100 border-gray-200 text-gray-400'
                           : isSelected
-                          ? 'bg-blue-600 border-blue-600 text-white shadow-md scale-105'
-                          : 'bg-white border-gray-200 text-gray-700 hover:border-blue-400 hover:bg-blue-50',
+                          ? 'bg-green-700 border-green-700 text-white shadow-md scale-105'
+                          : 'bg-white border-gray-200 text-gray-700 hover:border-green-400 hover:bg-green-50',
                       ].join(' ')}
                     >
                       <span className="text-lg font-bold">{d}</span>
@@ -255,7 +255,7 @@ export default function BookingModal({
                 type="button"
                 onClick={handleNext}
                 disabled={!selectedDurationOk}
-                className="mt-5 w-full bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium py-2.5 rounded-xl transition-colors"
+                className="mt-5 w-full bg-green-700 hover:bg-green-800 disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium py-2.5 rounded-xl transition-colors"
               >
                 Continuar
               </button>
@@ -275,7 +275,7 @@ export default function BookingModal({
                   onChange={(e) => setName(e.target.value)}
                   placeholder="Juan Pérez"
                   autoFocus
-                  className="w-full border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-green-600 focus:border-transparent"
                 />
               </div>
 
@@ -288,7 +288,7 @@ export default function BookingModal({
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
                   placeholder="11-1234-5678"
-                  className="w-full border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-green-600 focus:border-transparent"
                 />
                 <p className="text-xs text-gray-400 mt-1">
                   Usá este número para consultar o cancelar tu reserva.
@@ -304,7 +304,7 @@ export default function BookingModal({
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="juan@ejemplo.com"
-                  className="w-full border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-green-600 focus:border-transparent"
                 />
               </div>
 
@@ -317,7 +317,7 @@ export default function BookingModal({
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white font-medium py-2.5 rounded-xl transition-colors"
+                className="w-full bg-green-700 hover:bg-green-800 disabled:opacity-60 text-white font-medium py-2.5 rounded-xl transition-colors"
               >
                 {loading ? (
                   <span className="flex items-center justify-center gap-2">

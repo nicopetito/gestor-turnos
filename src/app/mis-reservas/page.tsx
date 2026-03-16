@@ -100,12 +100,12 @@ export default function MisReservasPage() {
             value={phone}
             onChange={(e) => setPhone(e.target.value)}
             placeholder="Ej: 11-1234-5678"
-            className="flex-1 border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="flex-1 border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-green-600 focus:border-transparent"
           />
           <button
             type="submit"
             disabled={loading || !phone.trim()}
-            className="bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white px-6 py-2.5 rounded-xl text-sm font-medium transition-colors"
+            className="bg-green-700 hover:bg-green-800 disabled:opacity-50 text-white px-6 py-2.5 rounded-xl text-sm font-medium transition-colors"
           >
             {loading ? 'Buscando…' : 'Buscar'}
           </button>

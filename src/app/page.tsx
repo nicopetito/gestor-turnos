@@ -4,8 +4,8 @@ export default function HomePage() {
   return (
     <main className="min-h-[calc(100vh-56px)] flex items-center justify-center px-4">
       <div className="text-center max-w-lg">
-        <div className="w-16 h-16 bg-blue-100 rounded-2xl flex items-center justify-center mx-auto mb-6">
-          <svg className="w-8 h-8 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <div className="w-16 h-16 bg-green-100 rounded-2xl flex items-center justify-center mx-auto mb-6">
+          <svg className="w-8 h-8 text-green-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
               d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
           </svg>
@@ -20,7 +20,7 @@ export default function HomePage() {
         <div className="flex flex-col sm:flex-row gap-3 justify-center">
           <Link
             href="/reservar"
-            className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-xl font-semibold text-sm transition-colors shadow-md shadow-blue-100"
+            className="bg-green-700 hover:bg-green-800 text-white px-8 py-3 rounded-xl font-semibold text-sm transition-colors shadow-md shadow-green-100"
           >
             Reservar Turno
           </Link>

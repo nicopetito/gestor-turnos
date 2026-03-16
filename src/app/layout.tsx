@@ -18,7 +18,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <nav className="max-w-6xl mx-auto px-4 h-14 flex items-center justify-between">
             <Link
               href="/"
-              className="font-bold text-gray-900 text-lg tracking-tight hover:text-blue-600 transition-colors"
+              className="font-bold text-gray-900 text-lg tracking-tight hover:text-green-700 transition-colors"
             >
               Canchas
             </Link>
@@ -39,7 +39,7 @@ function NavLink({ href, children }: { href: string; children: React.ReactNode }
   return (
     <Link
       href={href}
-      className="text-sm text-gray-600 hover:text-blue-600 font-medium px-3 py-2 rounded-lg hover:bg-blue-50 transition-colors"
+      className="text-sm text-gray-600 hover:text-green-700 font-medium px-3 py-2 rounded-lg hover:bg-green-50 transition-colors"
     >
       {children}
     </Link>

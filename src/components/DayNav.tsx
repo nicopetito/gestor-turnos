@@ -25,21 +25,21 @@ export default function DayNav({ dates, selectedDate, onSelectDate }: DayNavProp
             onClick={() => onSelectDate(date)}
             className={[
               'flex-shrink-0 flex flex-col items-center px-4 py-2 rounded-xl border text-sm',
-              'transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500',
+              'transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-600',
               isSelected
-                ? 'bg-blue-600 border-blue-600 text-white shadow-md'
-                : 'bg-white border-gray-200 text-gray-700 hover:border-blue-300 hover:bg-blue-50',
+                ? 'bg-green-700 border-green-700 text-white shadow-md'
+                : 'bg-white border-gray-200 text-gray-700 hover:border-green-300 hover:bg-green-50',
             ].join(' ')}
           >
             <span className="font-medium capitalize text-xs">
               {format(date, 'EEE', { locale: es })}
             </span>
             <span className="text-xl font-bold leading-tight">{format(date, 'd')}</span>
-            <span className={`text-xs capitalize ${isSelected ? 'text-blue-100' : 'text-gray-400'}`}>
+            <span className={`text-xs capitalize ${isSelected ? 'text-green-100' : 'text-gray-400'}`}>
               {format(date, 'MMM', { locale: es })}
             </span>
             {today && (
-              <span className={`text-[10px] font-semibold mt-0.5 ${isSelected ? 'text-blue-200' : 'text-blue-600'}`}>
+              <span className={`text-[10px] font-semibold mt-0.5 ${isSelected ? 'text-green-200' : 'text-green-700'}`}>
                 Hoy
               </span>
             )}

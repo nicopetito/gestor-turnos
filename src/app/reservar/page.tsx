@@ -70,7 +70,7 @@ export default function ReservarPage() {
 
         {loading && (
           <div className="flex justify-center items-center py-24">
-            <div className="w-8 h-8 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin" />
+            <div className="w-8 h-8 border-4 border-green-200 border-t-green-700 rounded-full animate-spin" />
           </div>
         )}
 
