@@ -1,13 +1,14 @@
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import Link from 'next/link';
+import Image from 'next/image';
 import './globals.css';
 
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: 'Gestor de Turnos',
-  description: 'Reservá tu turno en las canchas de Once Unidos',
+  title: 'Club Atlético Once Unidos',
+  description: 'Reservá tu turno en las canchas de Club Atlético Once Unidos',
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -18,9 +19,17 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <nav className="max-w-6xl mx-auto px-4 h-14 flex items-center justify-between">
             <Link
               href="/"
-              className="font-bold text-gray-900 text-lg tracking-tight hover:text-green-700 transition-colors"
+              className="flex items-center gap-2 hover:opacity-80 transition-opacity"
             >
-              Canchas
+              <Image
+                src="/imagenes/escudo.png"
+                alt="CAOU"
+                width={30}
+                height={30}
+              />
+              <span className="font-bold text-gray-900 text-base tracking-tight hidden sm:block">
+                Once Unidos
+              </span>
             </Link>
             <div className="flex items-center gap-1">
               <NavLink href="/reservar">Reservar</NavLink>

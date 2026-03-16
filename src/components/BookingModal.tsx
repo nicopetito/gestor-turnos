@@ -243,8 +243,10 @@ export default function BookingModal({
                           : 'bg-white border-gray-200 text-gray-700 hover:border-green-400 hover:bg-green-50',
                       ].join(' ')}
                     >
-                      <span className="text-lg font-bold">{d}</span>
-                      <span className="text-xs opacity-75">min</span>
+                      <span className="text-lg font-bold">{d} min</span>
+                      <span className="text-xs opacity-75">
+                        hasta {minutesToTime(timeToMinutes(slot.time) + d)}
+                      </span>
                       {!available && <span className="text-[10px] mt-1">No disponible</span>}
                     </button>
                   );
