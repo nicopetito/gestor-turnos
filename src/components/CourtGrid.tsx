@@ -275,7 +275,7 @@ export default function CourtGrid({ availability, selectedDate, onSlotClick }: C
     </div>
   );
 
-  // ── Desktop view (sin cambios) ───────────────────────────────────────────────
+  // ── Desktop view ────────────────────────────────────────────────────────────
   const desktopView = (
     <div className="hidden md:block">
       <div className="overflow-x-auto">
@@ -296,7 +296,7 @@ export default function CourtGrid({ availability, selectedDate, onSlotClick }: C
             </tr>
           </thead>
           <tbody className="divide-y divide-white/10">
-            {times.map((time, idx) => (
+            {times.filter((time) => !(isSelectedToday && timeToMinutes(time) < nowMinutes)).map((time, idx) => (
               <tr key={time} className={idx % 2 === 0 ? 'bg-transparent' : 'bg-white/5'}>
                 <td className="sticky left-0 z-10 bg-inherit px-4 py-1.5 font-mono text-xs text-white/50 border-r border-white/15">
                   {time}

@@ -52,15 +52,25 @@ export default function AdminBookingsPage() {
     fetchBookings(selectedDate);
   }, [selectedDate, fetchBookings]);
 
-  const handleCancel = async (bookingId: string) => {
+  const handleCancel = async (bookingId: string, clientName: string) => {
+    if (!confirm(`¿Cancelar la reserva de ${clientName}?`)) return;
     setCancellingId(bookingId);
-    await fetch('/api/admin/bookings', {
-      method:  'DELETE',
-      headers: { 'Content-Type': 'application/json' },
-      body:    JSON.stringify({ adminKey, bookingId }),
-    });
-    setCancellingId(null);
-    fetchBookings(selectedDate);
+    try {
+      const res = await fetch('/api/admin/bookings', {
+        method:  'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ adminKey, bookingId }),
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        setError(data.error ?? 'Error al cancelar');
+      }
+    } catch {
+      setError('Error de red al cancelar');
+    } finally {
+      setCancellingId(null);
+      fetchBookings(selectedDate);
+    }
   };
 
   const confirmed = bookings.filter((b) => b.status === 'confirmed');
@@ -166,7 +176,7 @@ export default function AdminBookingsPage() {
                         </td>
                         <td className="px-4 py-3">
                           <button
-                            onClick={() => handleCancel(b.id)}
+                            onClick={() => handleCancel(b.id, b.users?.name)}
                             disabled={cancellingId === b.id}
                             className="text-xs text-red-500 hover:text-red-700 hover:underline disabled:opacity-50"
                           >
