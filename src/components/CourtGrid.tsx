@@ -49,10 +49,10 @@ function isAllFixed(time: string, availability: CourtAvailability[]): boolean {
 // ── Desktop cell styles ───────────────────────────────────────────────────────
 
 const CELL_STYLES: Record<string, string> = {
-  available:   'bg-green-50 hover:bg-green-100 border-green-200 text-green-800 cursor-pointer hover:shadow-sm',
-  booked:      'bg-gray-100 border-gray-200 text-gray-400 cursor-not-allowed',
-  fixed:       'bg-indigo-50 border-indigo-200 text-indigo-700 cursor-not-allowed font-medium',
-  unavailable: 'bg-red-50 border-red-100 text-red-300 cursor-not-allowed',
+  available:   'bg-green-500/20 hover:bg-green-500/30 border-green-400/40 text-green-200 cursor-pointer hover:shadow-sm',
+  booked:      'bg-indigo-500/20 border-indigo-400/40 text-indigo-200 cursor-not-allowed',
+  fixed:       'bg-indigo-500/20 border-indigo-400/40 text-indigo-200 cursor-not-allowed',
+  unavailable: 'bg-indigo-500/20 border-indigo-400/40 text-indigo-200 cursor-not-allowed',
 };
 
 const STATUS_LABEL: Record<string, string> = {
@@ -119,7 +119,7 @@ export default function CourtGrid({ availability, selectedDate, onSlotClick }: C
   }
 
   if (courts.length === 0) {
-    return <p className="text-center text-gray-400 py-16">No hay datos de disponibilidad.</p>;
+    return <p className="text-center text-white/50 py-16">No hay datos de disponibilidad.</p>;
   }
 
   // ── Mobile view ─────────────────────────────────────────────────────────────
@@ -128,17 +128,17 @@ export default function CourtGrid({ availability, selectedDate, onSlotClick }: C
       {mobileDuration === null ? (
         /* Step 1: elegir duración */
         <div className="px-4 pt-5 pb-4 space-y-4">
-          <p className="text-sm font-semibold text-gray-700 text-center">¿Cuánto tiempo necesitás?</p>
+          <p className="text-sm font-semibold text-white/80 text-center">¿Cuánto tiempo necesitás?</p>
           <div className="grid grid-cols-3 gap-3">
             {DURATIONS.map((d) => (
               <button
                 key={d}
                 type="button"
                 onClick={() => { setMobileDuration(d); setWarningSlot(null); }}
-                className="flex flex-col items-center py-5 rounded-2xl border-2 border-gray-200 bg-white hover:border-green-500 hover:bg-green-50 active:scale-95 transition-all"
+                className="flex flex-col items-center py-5 rounded-2xl border-2 border-white/25 bg-white/15 backdrop-blur-sm hover:border-green-400 hover:bg-white/25 active:scale-95 transition-all"
               >
-                <span className="text-2xl font-bold text-gray-800">{d}</span>
-                <span className="text-xs text-gray-400 mt-0.5">min</span>
+                <span className="text-2xl font-bold text-white">{d}</span>
+                <span className="text-xs text-white/50 mt-0.5">min</span>
               </button>
             ))}
           </div>
@@ -147,21 +147,21 @@ export default function CourtGrid({ availability, selectedDate, onSlotClick }: C
         /* Step 2: lista de horarios */
         <div>
           {/* Header */}
-          <div className="flex items-center gap-2 px-4 py-3 border-b border-gray-100 bg-gray-50">
+          <div className="flex items-center gap-2 px-4 py-3 border-b border-white/10 bg-white/10">
             <button
               type="button"
               onClick={() => { setMobileDuration(null); setWarningSlot(null); }}
-              className="text-green-700 text-sm font-medium flex items-center gap-1 hover:underline"
+              className="text-green-400 text-sm font-medium flex items-center gap-1 hover:underline"
             >
               ←
             </button>
-            <span className="text-sm text-gray-400">|</span>
-            <span className="text-sm font-semibold text-gray-700">{mobileDuration} min</span>
-            <span className="text-sm text-gray-400">· Elegí un horario</span>
+            <span className="text-sm text-white/30">|</span>
+            <span className="text-sm font-semibold text-white/80">{mobileDuration} min</span>
+            <span className="text-sm text-white/40">· Elegí un horario</span>
           </div>
 
           {/* Slot rows */}
-          <div className="divide-y divide-gray-100">
+          <div className="divide-y divide-white/10">
             {times.map((time) => {
               // Ocultar slots del pasado cuando es hoy
               if (isSelectedToday && timeToMinutes(time) < nowMinutes) return null;
@@ -169,12 +169,12 @@ export default function CourtGrid({ availability, selectedDate, onSlotClick }: C
               const allFixed = isAllFixed(time, availability);
               const best     = getBestDurationAcrossCourts(time, availability);
 
-              // Clase fija en todas las canchas
+              // Ocupado en todas las canchas
               if (allFixed) {
                 return (
-                  <div key={time} className="flex items-center justify-between px-4 py-3 bg-indigo-50/40">
-                    <span className="font-mono text-sm text-indigo-500">{time}</span>
-                    <span className="text-xs text-indigo-400 font-medium">Clase fija</span>
+                  <div key={time} className="flex items-center justify-between px-4 py-3 bg-indigo-500/15">
+                    <span className="font-mono text-sm text-indigo-300">{time}</span>
+                    <span className="text-xs text-indigo-300 font-medium">Ocupado</span>
                   </div>
                 );
               }
@@ -182,9 +182,9 @@ export default function CourtGrid({ availability, selectedDate, onSlotClick }: C
               // Ninguna cancha disponible
               if (best === 0) {
                 return (
-                  <div key={time} className="flex items-center justify-between px-4 py-3">
-                    <span className="font-mono text-sm text-gray-300">{time}</span>
-                    <span className="text-xs text-gray-300">Ocupado</span>
+                  <div key={time} className="flex items-center justify-between px-4 py-3 bg-indigo-500/15">
+                    <span className="font-mono text-sm text-indigo-300">{time}</span>
+                    <span className="text-xs text-indigo-300 font-medium">Ocupado</span>
                   </div>
                 );
               }
@@ -198,12 +198,12 @@ export default function CourtGrid({ availability, selectedDate, onSlotClick }: C
                     key={time}
                     type="button"
                     onClick={() => handleMobileSlotTap(time)}
-                    className="w-full flex items-center justify-between px-4 py-3.5 hover:bg-green-50 active:bg-green-100 transition-colors"
+                    className="w-full flex items-center justify-between px-4 py-3.5 hover:bg-green-500/20 active:bg-green-500/30 transition-colors"
                   >
-                    <span className="font-mono text-base font-semibold text-gray-800">{time}</span>
+                    <span className="font-mono text-base font-semibold text-white">{time}</span>
                     <span className="flex items-center gap-2">
-                      <span className="w-2 h-2 rounded-full bg-green-500" />
-                      <span className="text-sm font-medium text-green-700">Disponible</span>
+                      <span className="w-2 h-2 rounded-full bg-green-400" />
+                      <span className="text-sm font-medium text-green-300">Disponible</span>
                     </span>
                   </button>
                 );
@@ -219,20 +219,20 @@ export default function CourtGrid({ availability, selectedDate, onSlotClick }: C
                         ? setWarningSlot(null)
                         : setWarningSlot({ time, maxDuration: best as Duration })
                     }
-                    className="w-full flex items-center justify-between px-4 py-3.5 hover:bg-amber-50 active:bg-amber-100 transition-colors"
+                    className="w-full flex items-center justify-between px-4 py-3.5 hover:bg-amber-500/15 active:bg-amber-500/25 transition-colors"
                   >
-                    <span className="font-mono text-base font-semibold text-gray-800">{time}</span>
+                    <span className="font-mono text-base font-semibold text-white">{time}</span>
                     <span className="flex items-center gap-2">
                       <span className="w-2 h-2 rounded-full bg-amber-400" />
-                      <span className="text-sm font-medium text-amber-700">Solo {best} min</span>
+                      <span className="text-sm font-medium text-amber-300">Solo {best} min</span>
                     </span>
                   </button>
 
                   {isWarningOpen && (
-                    <div className="mx-4 mb-3 bg-amber-50 border border-amber-200 rounded-xl p-4 space-y-3">
-                      <p className="text-sm text-amber-800 leading-relaxed">
+                    <div className="mx-4 mb-3 bg-amber-500/15 border border-amber-400/30 rounded-xl p-4 space-y-3">
+                      <p className="text-sm text-amber-200 leading-relaxed">
                         En este horario solo hay <strong>{best} min</strong> disponibles.{' '}
-                        <span className="text-amber-600">(pediste {mobileDuration} min)</span>
+                        <span className="text-amber-300">(pediste {mobileDuration} min)</span>
                       </p>
                       <div className="flex gap-2">
                         <button
@@ -245,7 +245,7 @@ export default function CourtGrid({ availability, selectedDate, onSlotClick }: C
                         <button
                           type="button"
                           onClick={() => setWarningSlot(null)}
-                          className="flex-1 bg-white border border-gray-200 text-gray-600 text-sm font-medium py-2.5 rounded-lg hover:bg-gray-50 transition-colors"
+                          className="flex-1 bg-white/15 border border-white/25 text-white/80 text-sm font-medium py-2.5 rounded-lg hover:bg-white/25 transition-colors"
                         >
                           Cancelar
                         </button>
@@ -258,11 +258,11 @@ export default function CourtGrid({ availability, selectedDate, onSlotClick }: C
           </div>
 
           {/* Legend */}
-          <div className="flex flex-wrap gap-4 px-4 py-3 border-t border-gray-100 bg-gray-50 text-xs text-gray-400">
+          <div className="flex flex-wrap gap-4 px-4 py-3 border-t border-white/10 bg-white/10 text-xs text-white/50">
             {[
               { dot: 'bg-green-500',  label: 'Disponible' },
               { dot: 'bg-amber-400',  label: 'Disponible parcial' },
-              { dot: 'bg-indigo-400', label: 'Clase fija' },
+              { dot: 'bg-indigo-400', label: 'Ocupado'    },
             ].map(({ dot, label }) => (
               <span key={label} className="flex items-center gap-1.5">
                 <span className={`w-2 h-2 rounded-full ${dot}`} />
@@ -281,24 +281,24 @@ export default function CourtGrid({ availability, selectedDate, onSlotClick }: C
       <div className="overflow-x-auto">
         <table className="min-w-full text-sm border-collapse">
           <thead>
-            <tr className="bg-gray-50 border-b border-gray-200">
-              <th className="sticky left-0 z-10 bg-gray-50 px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider w-20 border-r border-gray-200">
+            <tr className="bg-white/10 border-b border-white/15">
+              <th className="sticky left-0 z-10 bg-white/10 backdrop-blur-sm px-4 py-3 text-left text-xs font-semibold text-white/60 uppercase tracking-wider w-20 border-r border-white/15">
                 Hora
               </th>
               {courts.map((court) => (
                 <th
                   key={court.id}
-                  className="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider min-w-[150px]"
+                  className="px-4 py-3 text-center text-xs font-semibold text-white/70 uppercase tracking-wider min-w-[150px]"
                 >
                   {court.name}
                 </th>
               ))}
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-100">
+          <tbody className="divide-y divide-white/10">
             {times.map((time, idx) => (
-              <tr key={time} className={idx % 2 === 0 ? 'bg-white' : 'bg-gray-50/50'}>
-                <td className="sticky left-0 z-10 bg-inherit px-4 py-1.5 font-mono text-xs text-gray-500 border-r border-gray-200">
+              <tr key={time} className={idx % 2 === 0 ? 'bg-transparent' : 'bg-white/5'}>
+                <td className="sticky left-0 z-10 bg-inherit px-4 py-1.5 font-mono text-xs text-white/50 border-r border-white/15">
                   {time}
                 </td>
                 {courts.map((court) => {
@@ -323,7 +323,7 @@ export default function CourtGrid({ availability, selectedDate, onSlotClick }: C
                         }
                       >
                         {slot.status === 'fixed'
-                          ? slot.label ?? 'Clase'
+                          ? 'Ocupado'
                           : STATUS_LABEL[slot.status] ?? slot.status}
                       </button>
                     </td>
@@ -335,11 +335,10 @@ export default function CourtGrid({ availability, selectedDate, onSlotClick }: C
         </table>
       </div>
 
-      <div className="flex flex-wrap gap-4 px-4 py-3 border-t border-gray-100 bg-gray-50 text-xs text-gray-500">
+      <div className="flex flex-wrap gap-4 px-4 py-3 border-t border-white/10 bg-white/10 text-xs text-white/50">
         {[
-          { color: 'bg-green-100 border-green-200',   label: 'Disponible'  },
-          { color: 'bg-gray-100 border-gray-200',     label: 'Ocupado'     },
-          { color: 'bg-indigo-100 border-indigo-200', label: 'Clase fija'  },
+          { color: 'bg-green-500/25 border-green-400/40',   label: 'Disponible' },
+          { color: 'bg-indigo-500/25 border-indigo-400/40', label: 'Ocupado'    },
         ].map(({ color, label }) => (
           <span key={label} className="flex items-center gap-1.5">
             <span className={`w-3 h-3 rounded border ${color} inline-block`} />
@@ -351,7 +350,7 @@ export default function CourtGrid({ availability, selectedDate, onSlotClick }: C
   );
 
   return (
-    <div className="rounded-xl border border-gray-200 shadow-sm overflow-hidden bg-white">
+    <div className="rounded-xl border border-white/20 shadow-sm overflow-hidden bg-white/10 backdrop-blur-md">
       {mobileView}
       {desktopView}
     </div>

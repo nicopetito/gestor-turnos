@@ -92,6 +92,14 @@ export interface BlockUserBody {
   blocked_until: string; // "YYYY-MM-DD"
 }
 
+export interface FixedBookingSuspension {
+  id: number;
+  fixed_booking_id: number;
+  suspended_from: string; // "YYYY-MM-DD"
+  suspended_until: string; // "YYYY-MM-DD"
+  created_at: string;
+}
+
 export interface CreateFixedBookingBody {
   adminKey: string;
   court_id: number;

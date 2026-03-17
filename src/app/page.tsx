@@ -7,7 +7,7 @@ export default function HomePage() {
       {/* Hero */}
       <section className="relative min-h-[calc(100vh-56px)] flex items-center justify-center overflow-hidden">
         <Image
-          src="/imagenes/cancha-accion.jpg"
+          src="/imagenes/canchas-panoramica.jpg"
           alt="Canchas de tenis Once Unidos"
           fill
           className="object-cover object-center"

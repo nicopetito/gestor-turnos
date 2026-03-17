@@ -161,15 +161,25 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  // --- Fixed booking conflict ---
+  // --- Fixed booking conflict (skip suspended ones) ---
   const weekday = bookingDate.getDay();
-  const { data: fixedBookings } = await supabase
-    .from('fixed_bookings')
-    .select('*')
-    .eq('court_id', court_id)
-    .eq('weekday', weekday);
+  const [{ data: fixedBookings }, { data: suspensions }] = await Promise.all([
+    supabase
+      .from('fixed_bookings')
+      .select('*')
+      .eq('court_id', court_id)
+      .eq('weekday', weekday),
+    supabase
+      .from('fixed_booking_suspensions')
+      .select('fixed_booking_id')
+      .lte('suspended_from', date)
+      .gte('suspended_until', date),
+  ]);
+
+  const suspendedIds = new Set((suspensions ?? []).map((s) => s.fixed_booking_id));
 
   for (const fb of fixedBookings ?? []) {
+    if (suspendedIds.has(fb.id)) continue;
     const fbStart = timeToMinutes(fb.start_time);
     const fbEnd   = fbStart + fb.duration_minutes;
     if (startMin < fbEnd && endMin > fbStart) {

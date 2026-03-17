@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useAdminKey } from '../layout';
-import type { Duration } from '@/types';
+import type { Duration, FixedBookingSuspension } from '@/types';
 
 const WEEKDAYS = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
 const DURATIONS: Duration[] = [60, 90, 120];
@@ -22,6 +22,11 @@ function timeSlots(): string[] {
   return slots;
 }
 
+function formatDate(iso: string): string {
+  const [, m, d] = iso.split('-');
+  return `${d}/${m}`;
+}
+
 interface FixedBookingRow {
   id: number;
   court_id: number;
@@ -36,10 +41,16 @@ export default function AdminClasesPage() {
   const { adminKey } = useAdminKey();
 
   const [clases, setClases]       = useState<FixedBookingRow[]>([]);
+  const [suspensions, setSuspensions] = useState<FixedBookingSuspension[]>([]);
   const [loading, setLoading]     = useState(false);
   const [deletingId, setDeletingId] = useState<number | null>(null);
   const [error, setError]         = useState<string | null>(null);
   const [success, setSuccess]     = useState<string | null>(null);
+
+  // Which row has the suspend panel open
+  const [suspendingId, setSuspendingId] = useState<number | null>(null);
+  const [suspendingWeeks, setSuspendingWeeks] = useState<1 | 2 | 3>(1);
+  const [suspendLoading, setSuspendLoading] = useState(false);
 
   // Form state
   const [form, setForm] = useState({
@@ -56,10 +67,15 @@ export default function AdminClasesPage() {
     setLoading(true);
     setError(null);
     try {
-      const res  = await fetch(`/api/admin/fixed-bookings?adminKey=${encodeURIComponent(adminKey)}`);
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error);
-      setClases(data.fixedBookings ?? []);
+      const [clasesRes, suspRes] = await Promise.all([
+        fetch(`/api/admin/fixed-bookings?adminKey=${encodeURIComponent(adminKey)}`),
+        fetch(`/api/admin/fixed-bookings/suspensions?adminKey=${encodeURIComponent(adminKey)}`),
+      ]);
+      const clasesData = await clasesRes.json();
+      const suspData   = await suspRes.json();
+      if (!clasesRes.ok) throw new Error(clasesData.error);
+      setClases(clasesData.fixedBookings ?? []);
+      setSuspensions(suspData.suspensions ?? []);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Error al cargar');
     } finally {
@@ -68,6 +84,14 @@ export default function AdminClasesPage() {
   }, [adminKey]);
 
   useEffect(() => { fetchClases(); }, [fetchClases]);
+
+  const today = new Date().toISOString().slice(0, 10);
+
+  function getActiveSuspension(fixedBookingId: number): FixedBookingSuspension | null {
+    return suspensions.find(
+      (s) => s.fixed_booking_id === fixedBookingId && s.suspended_until >= today,
+    ) ?? null;
+  }
 
   const handleDelete = async (id: number) => {
     setDeletingId(id);
@@ -82,6 +106,40 @@ export default function AdminClasesPage() {
     } else {
       const d = await res.json();
       setError(d.error ?? 'Error al eliminar');
+    }
+    setTimeout(() => setSuccess(null), 3000);
+  };
+
+  const handleSuspend = async (id: number) => {
+    setSuspendLoading(true);
+    const res = await fetch(`/api/admin/fixed-bookings/${id}/suspend`, {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ adminKey, weeks: suspendingWeeks }),
+    });
+    const data = await res.json();
+    setSuspendLoading(false);
+    if (!res.ok) {
+      setError(data.error ?? 'Error al suspender');
+    } else {
+      setSuccess(`Clase suspendida por ${suspendingWeeks} semana${suspendingWeeks > 1 ? 's' : ''}.`);
+      setSuspendingId(null);
+      fetchClases();
+    }
+    setTimeout(() => setSuccess(null), 3000);
+  };
+
+  const handleReactivate = async (id: number) => {
+    const res = await fetch(
+      `/api/admin/fixed-bookings/${id}/suspend?adminKey=${encodeURIComponent(adminKey)}`,
+      { method: 'DELETE' },
+    );
+    if (res.ok) {
+      setSuccess('Clase reactivada.');
+      fetchClases();
+    } else {
+      const d = await res.json();
+      setError(d.error ?? 'Error al reactivar');
     }
     setTimeout(() => setSuccess(null), 3000);
   };
@@ -225,23 +283,94 @@ export default function AdminClasesPage() {
                 </div>
                 <table className="min-w-full text-sm">
                   <tbody className="divide-y divide-gray-100">
-                    {dayClases.sort((a, b) => a.start_time.localeCompare(b.start_time)).map((c) => (
-                      <tr key={c.id} className="hover:bg-gray-50 transition-colors">
-                        <td className="px-4 py-3 text-gray-600">{c.courts?.name ?? `Cancha ${c.court_id}`}</td>
-                        <td className="px-4 py-3 font-mono text-gray-800">{c.start_time.slice(0, 5)}</td>
-                        <td className="px-4 py-3 text-gray-500">{c.duration_minutes} min</td>
-                        <td className="px-4 py-3 font-medium text-indigo-700">{c.label}</td>
-                        <td className="px-4 py-3 text-right">
-                          <button
-                            onClick={() => handleDelete(c.id)}
-                            disabled={deletingId === c.id}
-                            className="text-xs text-red-500 hover:text-red-700 hover:underline disabled:opacity-50"
-                          >
-                            {deletingId === c.id ? 'Eliminando…' : 'Eliminar'}
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
+                    {dayClases.sort((a, b) => a.start_time.localeCompare(b.start_time)).map((c) => {
+                      const suspension = getActiveSuspension(c.id);
+                      const isSuspended = !!suspension;
+
+                      return (
+                        <>
+                          <tr key={c.id} className={`transition-colors ${isSuspended ? 'bg-amber-50' : 'hover:bg-gray-50'}`}>
+                            <td className="px-4 py-3 text-gray-600">{c.courts?.name ?? `Cancha ${c.court_id}`}</td>
+                            <td className="px-4 py-3 font-mono text-gray-800">{c.start_time.slice(0, 5)}</td>
+                            <td className="px-4 py-3 text-gray-500">{c.duration_minutes} min</td>
+                            <td className="px-4 py-3 font-medium text-indigo-700">{c.label}</td>
+                            <td className="px-4 py-3">
+                              {isSuspended ? (
+                                <span className="inline-flex items-center gap-1 text-xs font-medium text-amber-700 bg-amber-100 px-2 py-0.5 rounded-full">
+                                  Suspendida hasta {formatDate(suspension.suspended_until)}
+                                </span>
+                              ) : null}
+                            </td>
+                            <td className="px-4 py-3 text-right">
+                              <div className="flex items-center justify-end gap-3">
+                                {isSuspended ? (
+                                  <button
+                                    onClick={() => handleReactivate(c.id)}
+                                    className="text-xs text-green-600 hover:text-green-800 hover:underline"
+                                  >
+                                    Reactivar
+                                  </button>
+                                ) : (
+                                  <button
+                                    onClick={() => {
+                                      setSuspendingId(suspendingId === c.id ? null : c.id);
+                                      setSuspendingWeeks(1);
+                                    }}
+                                    className="text-xs text-amber-600 hover:text-amber-800 hover:underline"
+                                  >
+                                    Suspender
+                                  </button>
+                                )}
+                                <button
+                                  onClick={() => handleDelete(c.id)}
+                                  disabled={deletingId === c.id}
+                                  className="text-xs text-red-500 hover:text-red-700 hover:underline disabled:opacity-50"
+                                >
+                                  {deletingId === c.id ? 'Eliminando…' : 'Eliminar'}
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+
+                          {/* Suspend panel */}
+                          {suspendingId === c.id && (
+                            <tr key={`${c.id}-suspend`} className="bg-amber-50 border-t border-amber-100">
+                              <td colSpan={6} className="px-4 py-3">
+                                <div className="flex items-center gap-3 flex-wrap">
+                                  <span className="text-xs text-amber-800 font-medium">Suspender por:</span>
+                                  {([1, 2, 3] as const).map((w) => (
+                                    <button
+                                      key={w}
+                                      onClick={() => setSuspendingWeeks(w)}
+                                      className={`text-xs px-3 py-1 rounded-full border transition-colors ${
+                                        suspendingWeeks === w
+                                          ? 'bg-amber-600 border-amber-600 text-white'
+                                          : 'border-amber-300 text-amber-700 hover:bg-amber-100'
+                                      }`}
+                                    >
+                                      {w} sem.
+                                    </button>
+                                  ))}
+                                  <button
+                                    onClick={() => handleSuspend(c.id)}
+                                    disabled={suspendLoading}
+                                    className="text-xs bg-amber-600 hover:bg-amber-700 disabled:opacity-50 text-white px-3 py-1 rounded-lg transition-colors"
+                                  >
+                                    {suspendLoading ? 'Guardando…' : 'Confirmar'}
+                                  </button>
+                                  <button
+                                    onClick={() => setSuspendingId(null)}
+                                    className="text-xs text-gray-500 hover:text-gray-700"
+                                  >
+                                    Cancelar
+                                  </button>
+                                </div>
+                              </td>
+                            </tr>
+                          )}
+                        </>
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>

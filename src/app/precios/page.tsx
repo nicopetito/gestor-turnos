@@ -35,7 +35,7 @@ export default async function PreciosPage() {
     <div className="relative min-h-[calc(100vh-3.5rem)]">
       {/* Full-page background */}
       <Image
-        src="/imagenes/canchas-panoramica.jpg"
+        src="/imagenes/cancha-accion.jpg"
         alt="Canchas Once Unidos"
         fill
         className="object-cover object-center"

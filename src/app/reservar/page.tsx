@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { addDays, format, startOfDay } from 'date-fns';
+import Image from 'next/image';
 import DayNav from '@/components/DayNav';
 import CourtGrid from '@/components/CourtGrid';
 import BookingModal from '@/components/BookingModal';
@@ -56,11 +57,19 @@ export default function ReservarPage() {
     availability.find((a) => a.courtId === selectedSlot?.courtId)?.courtName ?? '';
 
   return (
-    <main className="min-h-screen bg-gray-50">
-      <div className="max-w-6xl mx-auto px-4 py-8">
+    <main className="relative min-h-screen">
+      <Image
+        src="/imagenes/cancha-jugadora.jpg"
+        alt="Canchas Once Unidos"
+        fill
+        className="object-cover object-center"
+        priority
+      />
+      <div className="absolute inset-0 bg-black/75" />
+      <div className="relative z-10 max-w-6xl mx-auto px-4 py-8">
         <div className="mb-6">
-          <h1 className="text-2xl font-bold text-gray-900">Reservar Turno</h1>
-          <p className="text-sm text-gray-500 mt-1 hidden md:block">
+          <h1 className="text-2xl font-bold text-white drop-shadow">Reservar Turno</h1>
+          <p className="text-sm text-white/70 mt-1 hidden md:block">
             Hacé clic en un horario libre para reservar. Turnos de 60, 90 o 120 minutos.
           </p>
         </div>

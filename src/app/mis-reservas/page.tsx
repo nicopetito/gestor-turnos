@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Image from 'next/image';
 import { differenceInHours, format, isPast, parseISO } from 'date-fns';
 import { es } from 'date-fns/locale';
 import type { Booking, BookingStatus } from '@/types';
@@ -86,10 +87,18 @@ export default function MisReservasPage() {
   const past     = bookings.filter((b) => !isUpcoming(b));
 
   return (
-    <main className="min-h-screen bg-gray-50">
-      <div className="max-w-2xl mx-auto px-4 py-8">
-        <h1 className="text-2xl font-bold text-gray-900 mb-2">Mis Reservas</h1>
-        <p className="text-sm text-gray-500 mb-8">
+    <main className="relative min-h-screen">
+      <Image
+        src="/imagenes/cancha-saque.jpg"
+        alt="Canchas Once Unidos"
+        fill
+        className="object-cover object-center"
+        priority
+      />
+      <div className="absolute inset-0 bg-black/60" />
+      <div className="relative z-10 max-w-2xl mx-auto px-4 py-8">
+        <h1 className="text-2xl font-bold text-white drop-shadow mb-2">Mis Reservas</h1>
+        <p className="text-sm text-white/70 mb-8">
           Ingresá tu teléfono para ver y gestionar tus turnos.
         </p>
 
@@ -122,7 +131,7 @@ export default function MisReservasPage() {
           <>
             {upcoming.length > 0 && (
               <section className="mb-8">
-                <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">
+                <h2 className="text-sm font-semibold text-white/60 uppercase tracking-wider mb-3">
                   Próximas reservas
                 </h2>
                 <div className="space-y-3">
@@ -141,7 +150,7 @@ export default function MisReservasPage() {
 
             {past.length > 0 && (
               <section>
-                <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">
+                <h2 className="text-sm font-semibold text-white/60 uppercase tracking-wider mb-3">
                   Historial
                 </h2>
                 <div className="space-y-3">
@@ -159,7 +168,7 @@ export default function MisReservasPage() {
             )}
 
             {bookings.length === 0 && (
-              <p className="text-center text-gray-400 py-16">
+              <p className="text-center text-white/50 py-16">
                 No se encontraron reservas para este teléfono.
               </p>
             )}

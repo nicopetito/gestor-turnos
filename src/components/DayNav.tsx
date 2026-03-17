@@ -27,15 +27,15 @@ export default function DayNav({ dates, selectedDate, onSelectDate }: DayNavProp
               'flex-shrink-0 flex flex-col items-center px-4 py-2 rounded-xl border text-sm',
               'transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-600',
               isSelected
-                ? 'bg-green-700 border-green-700 text-white shadow-md'
-                : 'bg-white border-gray-200 text-gray-700 hover:border-green-300 hover:bg-green-50',
+                ? 'bg-green-700 border-green-600 text-white shadow-md'
+                : 'bg-white/15 backdrop-blur-sm border-white/30 text-white hover:border-green-400 hover:bg-white/25',
             ].join(' ')}
           >
             <span className="font-medium capitalize text-xs">
               {format(date, 'EEE', { locale: es })}
             </span>
             <span className="text-xl font-bold leading-tight">{format(date, 'd')}</span>
-            <span className={`text-xs capitalize ${isSelected ? 'text-green-100' : 'text-gray-400'}`}>
+            <span className={`text-xs capitalize ${isSelected ? 'text-green-100' : 'text-white/60'}`}>
               {format(date, 'MMM', { locale: es })}
             </span>
             {today && (

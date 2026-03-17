@@ -1,4 +1,4 @@
-import type { FixedBooking, SlotInfo, CourtAvailability } from '@/types';
+import type { FixedBooking, FixedBookingSuspension, SlotInfo } from '@/types';
 
 const OPEN_HOUR  = 8;   // 08:00 inclusive
 const CLOSE_HOUR = 23;  // 23:00 exclusive (last slot starts 22:30)
@@ -76,6 +76,22 @@ export function isSlotBooked(
 }
 
 /**
+ * Returns true if a fixed booking is suspended for the given date.
+ */
+export function isFixedBookingSuspended(
+  fixedBookingId: number,
+  date: string,
+  suspensions: FixedBookingSuspension[],
+): boolean {
+  return suspensions.some(
+    (s) =>
+      s.fixed_booking_id === fixedBookingId &&
+      date >= s.suspended_from &&
+      date <= s.suspended_until,
+  );
+}
+
+/**
  * Builds the full SlotInfo array for one court on one date.
  */
 export function buildCourtSlots(
@@ -90,11 +106,12 @@ export function buildCourtSlots(
     end_time: string;
     status: string;
   }>,
+  suspensions: FixedBookingSuspension[] = [],
 ): SlotInfo[] {
   const courtFixed = fixedBookings.filter((fb) => fb.court_id === courtId);
   return generateTimeSlots().map((time) => {
     const fixed = findFixedBooking(time, weekday, courtFixed);
-    if (fixed) {
+    if (fixed && !isFixedBookingSuspended(fixed.id, date, suspensions)) {
       return { time, courtId, date, status: 'fixed', label: fixed.label };
     }
     if (isSlotBooked(time, courtId, date, bookings)) {
