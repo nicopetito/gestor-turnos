@@ -2,7 +2,7 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
-import { motion } from 'framer-motion';
+import { motion, type Variants } from 'framer-motion';
 
 const steps = [
   {
@@ -37,12 +37,12 @@ const steps = [
   },
 ];
 
-const fadeUp = {
+const fadeUp: Variants = {
   hidden: { opacity: 0, y: 24 },
   visible: (i: number) => ({
     opacity: 1,
     y: 0,
-    transition: { delay: i * 0.12, duration: 0.45, ease: 'easeOut' },
+    transition: { delay: i * 0.12, duration: 0.45, ease: 'easeOut' as const },
   }),
 };
 
