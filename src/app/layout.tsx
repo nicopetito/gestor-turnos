@@ -34,6 +34,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <div className="flex items-center gap-1">
               <NavLink href="/reservar">Reservar</NavLink>
               <NavLink href="/mis-reservas">Mis Reservas</NavLink>
+              <NavLink href="/precios">Precios</NavLink>
             </div>
           </nav>
         </header>

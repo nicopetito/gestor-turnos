@@ -73,6 +73,15 @@ export interface CreateBookingBody {
   email?: string; // optional — used for email notifications
 }
 
+export interface Price {
+  id: number;
+  duration_minutes: number;
+  is_member: boolean;
+  con_luz: boolean;
+  amount: number;
+  updated_at: string;
+}
+
 export interface CancelBookingBody {
   phone: string;
 }

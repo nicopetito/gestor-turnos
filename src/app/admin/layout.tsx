@@ -12,9 +12,10 @@ const STORAGE_KEY = 'admin_key';
 
 // ---- Nav links ----
 const NAV_LINKS = [
-  { href: '/admin',          label: 'Reservas'    },
-  { href: '/admin/clases',   label: 'Clases fijas' },
-  { href: '/admin/usuarios', label: 'Usuarios'    },
+  { href: '/admin',           label: 'Reservas'    },
+  { href: '/admin/clases',    label: 'Clases fijas' },
+  { href: '/admin/usuarios',  label: 'Usuarios'    },
+  { href: '/admin/precios',   label: 'Precios'     },
 ];
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {

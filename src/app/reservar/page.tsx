@@ -5,7 +5,7 @@ import { addDays, format, startOfDay } from 'date-fns';
 import DayNav from '@/components/DayNav';
 import CourtGrid from '@/components/CourtGrid';
 import BookingModal from '@/components/BookingModal';
-import type { CourtAvailability, SlotInfo } from '@/types';
+import type { CourtAvailability, Duration, SlotInfo } from '@/types';
 
 const DAYS_AHEAD = 7;
 
@@ -13,11 +13,12 @@ export default function ReservarPage() {
   const today = startOfDay(new Date());
   const dates = Array.from({ length: DAYS_AHEAD }, (_, i) => addDays(today, i));
 
-  const [selectedDate, setSelectedDate]     = useState<Date>(today);
-  const [availability, setAvailability]     = useState<CourtAvailability[]>([]);
-  const [loading, setLoading]               = useState(false);
-  const [fetchError, setFetchError]         = useState<string | null>(null);
-  const [selectedSlot, setSelectedSlot]     = useState<SlotInfo | null>(null);
+  const [selectedDate, setSelectedDate]         = useState<Date>(today);
+  const [availability, setAvailability]         = useState<CourtAvailability[]>([]);
+  const [loading, setLoading]                   = useState(false);
+  const [fetchError, setFetchError]             = useState<string | null>(null);
+  const [selectedSlot, setSelectedSlot]         = useState<SlotInfo | null>(null);
+  const [selectedDuration, setSelectedDuration] = useState<Duration | undefined>(undefined);
 
   const fetchAvailability = useCallback(async (date: Date) => {
     setLoading(true);
@@ -39,13 +40,15 @@ export default function ReservarPage() {
     fetchAvailability(selectedDate);
   }, [selectedDate, fetchAvailability]);
 
-  const handleSlotClick = (slot: SlotInfo) => {
+  const handleSlotClick = (slot: SlotInfo, duration?: Duration) => {
     if (slot.status !== 'available') return;
     setSelectedSlot(slot);
+    setSelectedDuration(duration);
   };
 
   const handleBookingSuccess = () => {
     setSelectedSlot(null);
+    setSelectedDuration(undefined);
     fetchAvailability(selectedDate);
   };
 
@@ -57,7 +60,7 @@ export default function ReservarPage() {
       <div className="max-w-6xl mx-auto px-4 py-8">
         <div className="mb-6">
           <h1 className="text-2xl font-bold text-gray-900">Reservar Turno</h1>
-          <p className="text-sm text-gray-500 mt-1">
+          <p className="text-sm text-gray-500 mt-1 hidden md:block">
             Hacé clic en un horario libre para reservar. Turnos de 60, 90 o 120 minutos.
           </p>
         </div>
@@ -81,7 +84,11 @@ export default function ReservarPage() {
         )}
 
         {!loading && !fetchError && (
-          <CourtGrid availability={availability} onSlotClick={handleSlotClick} />
+          <CourtGrid
+            availability={availability}
+            selectedDate={selectedDate}
+            onSlotClick={handleSlotClick}
+          />
         )}
       </div>
 
@@ -90,7 +97,8 @@ export default function ReservarPage() {
           slot={selectedSlot}
           courtName={selectedCourtName}
           allAvailability={availability}
-          onClose={() => setSelectedSlot(null)}
+          initialDuration={selectedDuration}
+          onClose={() => { setSelectedSlot(null); setSelectedDuration(undefined); }}
           onSuccess={handleBookingSuccess}
         />
       )}

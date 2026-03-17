@@ -11,6 +11,7 @@ interface BookingModalProps {
   slot: Pick<SlotInfo, 'date' | 'courtId' | 'time'>;
   courtName: string;
   allAvailability: CourtAvailability[];
+  initialDuration?: Duration;
   onClose: () => void;
   onSuccess: () => void;
 }
@@ -21,13 +22,15 @@ export default function BookingModal({
   slot,
   courtName,
   allAvailability,
+  initialDuration,
   onClose,
   onSuccess,
 }: BookingModalProps) {
   const router = useRouter();
 
-  const [step, setStep]           = useState<1 | 2 | 3>(1);
-  const [duration, setDuration]   = useState<Duration>(60);
+  // Si viene del flujo mobile, la duración ya está elegida → arrancar en step 2
+  const [step, setStep]           = useState<1 | 2 | 3>(initialDuration ? 2 : 1);
+  const [duration, setDuration]   = useState<Duration>(initialDuration ?? 60);
   const [name, setName]           = useState('');
   const [phone, setPhone]         = useState('');
   const [email, setEmail]         = useState('');
@@ -83,8 +86,8 @@ export default function BookingModal({
         setError(data.error ?? 'Error al realizar la reserva.');
       } else {
         setBooking(data.booking);
-        setStep(3);          // Show success screen
-        onSuccess();         // Refresh the grid in the background
+        setStep(3);
+        onSuccess();
       }
     } catch {
       setError('Error de conexión. Intentá nuevamente.');
@@ -101,11 +104,9 @@ export default function BookingModal({
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm">
         <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
-          {/* Green top bar */}
           <div className="h-2 bg-gradient-to-r from-green-400 to-emerald-500" />
 
           <div className="px-6 py-8 text-center space-y-5">
-            {/* Checkmark */}
             <div className="flex justify-center">
               <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center">
                 <svg
@@ -125,10 +126,9 @@ export default function BookingModal({
               <p className="text-sm text-gray-500 mt-1">Tu turno quedó registrado correctamente.</p>
             </div>
 
-            {/* Booking details card */}
             <div className="bg-gray-50 border border-gray-200 rounded-xl p-5 text-left space-y-3">
-              <DetailRow icon="📅" label="Fecha" value={dateLabel} capitalize />
-              <DetailRow icon="🏟️" label="Cancha" value={courtName} />
+              <DetailRow icon="📅" label="Fecha"    value={dateLabel} capitalize />
+              <DetailRow icon="🏟️" label="Cancha"   value={courtName} note={initialDuration ? 'asignada automáticamente' : undefined} />
               <DetailRow
                 icon="⏰"
                 label="Horario"
@@ -144,7 +144,6 @@ export default function BookingModal({
               <span className="font-medium text-gray-500">Mis Reservas</span>.
             </p>
 
-            {/* Actions */}
             <div className="flex flex-col gap-2 pt-1">
               <button
                 onClick={() => router.push(`/mis-reservas?phone=${encodeURIComponent(phone)}`)}
@@ -213,7 +212,14 @@ export default function BookingModal({
           {/* Slot summary */}
           <div className="bg-green-50 border border-green-100 rounded-xl p-4 text-sm text-green-900 space-y-1">
             <p className="font-semibold capitalize">{dateLabel}</p>
-            <p>{courtName}</p>
+            <p className="flex items-center gap-1.5">
+              {initialDuration && (
+                <span className="text-[10px] font-semibold bg-green-200 text-green-800 px-1.5 py-0.5 rounded-full uppercase tracking-wide">
+                  Asignada
+                </span>
+              )}
+              {courtName}
+            </p>
             <p>
               {slot.time} – {endTime}
               <span className="ml-2 text-green-600 text-xs">({duration} min)</span>
@@ -264,7 +270,7 @@ export default function BookingModal({
             </div>
           )}
 
-          {/* Step 2: Name + phone */}
+          {/* Step 2: Name + phone + email */}
           {step === 2 && (
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
@@ -344,20 +350,25 @@ function DetailRow({
   label,
   value,
   capitalize = false,
+  note,
 }: {
   icon: string;
   label: string;
   value: string;
   capitalize?: boolean;
+  note?: string;
 }) {
   return (
     <div className="flex items-start gap-3">
       <span className="text-base mt-0.5">{icon}</span>
       <div className="flex-1 flex justify-between gap-2">
         <span className="text-xs text-gray-500">{label}</span>
-        <span className={`text-sm font-medium text-gray-800 text-right ${capitalize ? 'capitalize' : ''}`}>
-          {value}
-        </span>
+        <div className="text-right">
+          <span className={`text-sm font-medium text-gray-800 ${capitalize ? 'capitalize' : ''}`}>
+            {value}
+          </span>
+          {note && <p className="text-[10px] text-gray-400 mt-0.5">{note}</p>}
+        </div>
       </div>
     </div>
   );
