@@ -278,101 +278,110 @@ export default function AdminClasesPage() {
             if (dayClases.length === 0) return null;
             return (
               <div key={idx} className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm">
+                {/* Day header */}
                 <div className="px-4 py-3 bg-gray-50 border-b border-gray-100">
                   <h3 className="text-sm font-semibold text-gray-700">{day}</h3>
                 </div>
-                <table className="min-w-full text-sm">
-                  <tbody className="divide-y divide-gray-100">
-                    {dayClases.sort((a, b) => a.start_time.localeCompare(b.start_time)).map((c) => {
-                      const suspension = getActiveSuspension(c.id);
-                      const isSuspended = !!suspension;
 
-                      return (
-                        <>
-                          <tr key={c.id} className={`transition-colors ${isSuspended ? 'bg-amber-50' : 'hover:bg-gray-50'}`}>
-                            <td className="px-4 py-3 text-gray-600">{c.courts?.name ?? `Cancha ${c.court_id}`}</td>
-                            <td className="px-4 py-3 font-mono text-gray-800">{c.start_time.slice(0, 5)}</td>
-                            <td className="px-4 py-3 text-gray-500">{c.duration_minutes} min</td>
-                            <td className="px-4 py-3 font-medium text-indigo-700">{c.label}</td>
-                            <td className="px-4 py-3">
-                              {isSuspended ? (
-                                <span className="inline-flex items-center gap-1 text-xs font-medium text-amber-700 bg-amber-100 px-2 py-0.5 rounded-full">
-                                  Suspendida hasta {formatDate(suspension.suspended_until)}
-                                </span>
-                              ) : null}
-                            </td>
-                            <td className="px-4 py-3 text-right">
-                              <div className="flex items-center justify-end gap-3">
-                                {isSuspended ? (
-                                  <button
-                                    onClick={() => handleReactivate(c.id)}
-                                    className="text-xs text-green-600 hover:text-green-800 hover:underline"
-                                  >
-                                    Reactivar
-                                  </button>
-                                ) : (
-                                  <button
-                                    onClick={() => {
-                                      setSuspendingId(suspendingId === c.id ? null : c.id);
-                                      setSuspendingWeeks(1);
-                                    }}
-                                    className="text-xs text-amber-600 hover:text-amber-800 hover:underline"
-                                  >
-                                    Suspender
-                                  </button>
-                                )}
+                {/* Items */}
+                <div className="divide-y divide-gray-100">
+                  {dayClases.sort((a, b) => a.start_time.localeCompare(b.start_time)).map((c) => {
+                    const suspension  = getActiveSuspension(c.id);
+                    const isSuspended = !!suspension;
+
+                    return (
+                      <div key={c.id} className={`px-4 py-3 ${isSuspended ? 'bg-amber-50' : ''}`}>
+                        {/* Main row */}
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="min-w-0 flex flex-col gap-0.5">
+                            {/* Hora + duración */}
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <span className="font-mono text-sm font-semibold text-gray-800">
+                                {c.start_time.slice(0, 5)}
+                              </span>
+                              <span className="text-xs text-gray-400">{c.duration_minutes} min</span>
+                              <span className="text-xs font-medium text-indigo-600">{c.label}</span>
+                            </div>
+                            {/* Cancha */}
+                            <span className="text-xs text-gray-500">
+                              {c.courts?.name ?? `Cancha ${c.court_id}`}
+                            </span>
+                            {/* Badge suspensión */}
+                            {isSuspended && (
+                              <span className="inline-flex items-center gap-1 text-xs font-medium text-amber-700 bg-amber-100 px-2 py-0.5 rounded-full w-fit mt-1">
+                                Suspendida hasta {formatDate(suspension.suspended_until)}
+                              </span>
+                            )}
+                          </div>
+
+                          {/* Acciones */}
+                          <div className="flex items-center gap-2 flex-shrink-0">
+                            {isSuspended ? (
+                              <button
+                                onClick={() => handleReactivate(c.id)}
+                                className="text-xs border border-green-300 text-green-700 hover:bg-green-50 px-2.5 py-1 rounded-lg transition-colors"
+                              >
+                                Reactivar
+                              </button>
+                            ) : (
+                              <button
+                                onClick={() => {
+                                  setSuspendingId(suspendingId === c.id ? null : c.id);
+                                  setSuspendingWeeks(1);
+                                }}
+                                className="text-xs border border-amber-300 text-amber-700 hover:bg-amber-50 px-2.5 py-1 rounded-lg transition-colors"
+                              >
+                                Suspender
+                              </button>
+                            )}
+                            <button
+                              onClick={() => handleDelete(c.id)}
+                              disabled={deletingId === c.id}
+                              className="text-xs border border-red-200 text-red-500 hover:bg-red-50 px-2.5 py-1 rounded-lg transition-colors disabled:opacity-50"
+                            >
+                              {deletingId === c.id ? '…' : 'Eliminar'}
+                            </button>
+                          </div>
+                        </div>
+
+                        {/* Panel suspensión */}
+                        {suspendingId === c.id && (
+                          <div className="mt-3 bg-amber-50 border border-amber-200 rounded-xl p-3">
+                            <p className="text-xs text-amber-800 font-medium mb-2">Suspender por:</p>
+                            <div className="flex flex-wrap items-center gap-2">
+                              {([1, 2, 3] as const).map((w) => (
                                 <button
-                                  onClick={() => handleDelete(c.id)}
-                                  disabled={deletingId === c.id}
-                                  className="text-xs text-red-500 hover:text-red-700 hover:underline disabled:opacity-50"
+                                  key={w}
+                                  onClick={() => setSuspendingWeeks(w)}
+                                  className={`text-xs px-3 py-1.5 rounded-full border transition-colors ${
+                                    suspendingWeeks === w
+                                      ? 'bg-amber-600 border-amber-600 text-white'
+                                      : 'border-amber-300 text-amber-700 hover:bg-amber-100'
+                                  }`}
                                 >
-                                  {deletingId === c.id ? 'Eliminando…' : 'Eliminar'}
+                                  {w} sem.
                                 </button>
-                              </div>
-                            </td>
-                          </tr>
-
-                          {/* Suspend panel */}
-                          {suspendingId === c.id && (
-                            <tr key={`${c.id}-suspend`} className="bg-amber-50 border-t border-amber-100">
-                              <td colSpan={6} className="px-4 py-3">
-                                <div className="flex items-center gap-3 flex-wrap">
-                                  <span className="text-xs text-amber-800 font-medium">Suspender por:</span>
-                                  {([1, 2, 3] as const).map((w) => (
-                                    <button
-                                      key={w}
-                                      onClick={() => setSuspendingWeeks(w)}
-                                      className={`text-xs px-3 py-1 rounded-full border transition-colors ${
-                                        suspendingWeeks === w
-                                          ? 'bg-amber-600 border-amber-600 text-white'
-                                          : 'border-amber-300 text-amber-700 hover:bg-amber-100'
-                                      }`}
-                                    >
-                                      {w} sem.
-                                    </button>
-                                  ))}
-                                  <button
-                                    onClick={() => handleSuspend(c.id)}
-                                    disabled={suspendLoading}
-                                    className="text-xs bg-amber-600 hover:bg-amber-700 disabled:opacity-50 text-white px-3 py-1 rounded-lg transition-colors"
-                                  >
-                                    {suspendLoading ? 'Guardando…' : 'Confirmar'}
-                                  </button>
-                                  <button
-                                    onClick={() => setSuspendingId(null)}
-                                    className="text-xs text-gray-500 hover:text-gray-700"
-                                  >
-                                    Cancelar
-                                  </button>
-                                </div>
-                              </td>
-                            </tr>
-                          )}
-                        </>
-                      );
-                    })}
-                  </tbody>
-                </table>
+                              ))}
+                              <button
+                                onClick={() => handleSuspend(c.id)}
+                                disabled={suspendLoading}
+                                className="text-xs bg-amber-600 hover:bg-amber-700 disabled:opacity-50 text-white px-3 py-1.5 rounded-lg transition-colors"
+                              >
+                                {suspendLoading ? 'Guardando…' : 'Confirmar'}
+                              </button>
+                              <button
+                                onClick={() => setSuspendingId(null)}
+                                className="text-xs text-gray-500 hover:text-gray-700"
+                              >
+                                Cancelar
+                              </button>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
             );
           })}

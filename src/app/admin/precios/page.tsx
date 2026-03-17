@@ -69,7 +69,7 @@ export default function AdminPreciosPage() {
 
   return (
     <div className="max-w-2xl">
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
         <h1 className="text-xl font-bold text-gray-900">Lista de precios</h1>
         <button
           onClick={handleSave}
@@ -102,15 +102,15 @@ export default function AdminPreciosPage() {
             <h2 className="text-sm font-semibold text-gray-700 mb-3">
               Horario de corte para precio con luz
             </h2>
-            <div className="flex items-center gap-3">
-              <label className="text-sm text-gray-600">A partir de las</label>
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+              <label className="text-sm text-gray-600 whitespace-nowrap">A partir de las</label>
               <input
                 type="time"
                 value={luzStartTime}
                 onChange={(e) => setLuzStartTime(e.target.value)}
                 className="border border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900"
               />
-              <span className="text-sm text-gray-500">se aplica el precio "con luz"</span>
+              <span className="text-sm text-gray-400">se aplica el precio "con luz"</span>
             </div>
           </div>
 
@@ -142,48 +142,42 @@ function PriceGroup({
   rows: PriceRow[];
   onUpdate: (id: number, value: string) => void;
 }) {
-  const sinLuz  = rows.filter((r) => !r.con_luz).sort((a, b) => a.duration_minutes - b.duration_minutes);
-  const conLuz  = rows.filter((r) =>  r.con_luz).sort((a, b) => a.duration_minutes - b.duration_minutes);
+  const sinLuz = rows.filter((r) => !r.con_luz).sort((a, b) => a.duration_minutes - b.duration_minutes);
+  const conLuz = rows.filter((r) =>  r.con_luz).sort((a, b) => a.duration_minutes - b.duration_minutes);
 
   return (
     <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
-      <div className="px-5 py-3 bg-gray-50 border-b border-gray-200">
-        <h2 className="text-sm font-semibold text-gray-800">{title}</h2>
+      {/* Header con columnas */}
+      <div className="grid grid-cols-[1fr_auto_auto] items-center px-4 py-2.5 bg-gray-50 border-b border-gray-100 gap-3">
+        <span className="text-sm font-semibold text-gray-800">{title}</span>
+        <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider w-28 text-center">Sin luz</span>
+        <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider w-28 text-center">Con luz</span>
       </div>
-      <table className="min-w-full text-sm">
-        <thead>
-          <tr className="border-b border-gray-100">
-            <th className="px-5 py-2.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Duración</th>
-            <th className="px-5 py-2.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Sin luz</th>
-            <th className="px-5 py-2.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Con luz</th>
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-gray-50">
-          {sinLuz.map((row) => {
-            const luzRow = conLuz.find((r) => r.duration_minutes === row.duration_minutes);
-            return (
-              <tr key={row.id} className="hover:bg-gray-50">
-                <td className="px-5 py-3 font-medium text-gray-800">
-                  {DURATION_LABELS[row.duration_minutes] ?? `${row.duration_minutes} min`}
-                </td>
-                <td className="px-5 py-3">
-                  <PriceInput row={row} onUpdate={onUpdate} />
-                </td>
-                <td className="px-5 py-3">
-                  {luzRow ? <PriceInput row={luzRow} onUpdate={onUpdate} /> : '—'}
-                </td>
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
+
+      {/* Filas */}
+      <div className="divide-y divide-gray-50">
+        {sinLuz.map((row) => {
+          const luzRow = conLuz.find((r) => r.duration_minutes === row.duration_minutes);
+          return (
+            <div key={row.id} className="grid grid-cols-[1fr_auto_auto] items-center px-4 py-3 gap-3 hover:bg-gray-50/60 transition-colors">
+              <span className="text-sm font-medium text-gray-700">
+                {DURATION_LABELS[row.duration_minutes] ?? `${row.duration_minutes} min`}
+              </span>
+              <PriceInput row={row} onUpdate={onUpdate} />
+              <div className="w-28">
+                {luzRow ? <PriceInput row={luzRow} onUpdate={onUpdate} /> : <span className="text-gray-300 text-sm pl-5">—</span>}
+              </div>
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 }
 
 function PriceInput({ row, onUpdate }: { row: PriceRow; onUpdate: (id: number, value: string) => void }) {
   return (
-    <div className="flex items-center gap-1">
+    <div className="flex items-center gap-1 w-28">
       <span className="text-gray-400 text-sm">$</span>
       <input
         type="number"
@@ -191,7 +185,7 @@ function PriceInput({ row, onUpdate }: { row: PriceRow; onUpdate: (id: number, v
         step={500}
         value={row.draft}
         onChange={(e) => onUpdate(row.id, e.target.value)}
-        className="w-28 border border-gray-300 rounded-lg px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 text-right"
+        className="flex-1 min-w-0 border border-gray-300 rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 text-right"
       />
     </div>
   );

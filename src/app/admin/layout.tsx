@@ -106,31 +106,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       <div className="min-h-screen bg-gray-50">
         {/* Top bar */}
         <header className="bg-gray-900 text-white sticky top-0 z-40">
-          <div className="max-w-6xl mx-auto px-4 h-14 flex items-center justify-between">
-            <div className="flex items-center gap-6">
-              <span className="font-bold text-sm tracking-wide uppercase text-gray-300">
-                Admin
-              </span>
-              <nav className="flex gap-1">
-                {NAV_LINKS.map(({ href, label }) => {
-                  const isActive = pathname === href;
-                  return (
-                    <Link
-                      key={href}
-                      href={href}
-                      className={[
-                        'text-sm px-3 py-1.5 rounded-lg transition-colors',
-                        isActive
-                          ? 'bg-white/10 text-white font-medium'
-                          : 'text-gray-400 hover:text-white hover:bg-white/5',
-                      ].join(' ')}
-                    >
-                      {label}
-                    </Link>
-                  );
-                })}
-              </nav>
-            </div>
+          {/* Row 1: marca + acciones */}
+          <div className="max-w-6xl mx-auto px-4 h-11 flex items-center justify-between border-b border-white/5">
+            <span className="font-bold text-sm tracking-wide uppercase text-gray-300">Admin</span>
             <div className="flex items-center gap-3">
               <Link href="/" className="text-xs text-gray-400 hover:text-white transition-colors">
                 ← Sitio
@@ -142,6 +120,26 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 Salir
               </button>
             </div>
+          </div>
+          {/* Row 2: nav links */}
+          <div className="max-w-6xl mx-auto px-2 flex gap-0.5 overflow-x-auto scrollbar-hide">
+            {NAV_LINKS.map(({ href, label }) => {
+              const isActive = pathname === href;
+              return (
+                <Link
+                  key={href}
+                  href={href}
+                  className={[
+                    'flex-shrink-0 text-sm px-3 py-2.5 transition-colors border-b-2',
+                    isActive
+                      ? 'border-white text-white font-medium'
+                      : 'border-transparent text-gray-400 hover:text-white',
+                  ].join(' ')}
+                >
+                  {label}
+                </Link>
+              );
+            })}
           </div>
         </header>
 
