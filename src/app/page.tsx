@@ -199,6 +199,110 @@ export default function HomePage() {
           </motion.div>
         </div>
       </section>
+
+      {/* Ubicación */}
+      <section className="bg-gray-50 py-20 px-4">
+        <div className="max-w-4xl mx-auto">
+          <motion.div
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, margin: '-60px' }}
+            variants={fadeUp}
+            custom={0}
+            className="text-center mb-10"
+          >
+            <span className="text-xs font-semibold uppercase tracking-widest text-green-600">
+              Dónde encontrarnos
+            </span>
+            <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mt-2">
+              Ubicación
+            </h2>
+          </motion.div>
+
+          <motion.div
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, margin: '-40px' }}
+            variants={fadeUp}
+            custom={1}
+            className="grid grid-cols-1 sm:grid-cols-2 gap-6 items-start"
+          >
+            {/* Mapa */}
+            <div className="rounded-2xl overflow-hidden shadow-md border border-gray-200 aspect-[4/3]">
+              <iframe
+                title="Ubicación Club Once Unidos"
+                src="https://maps.google.com/maps?q=Belisario+Rold%C3%A1n+52,+Mar+del+Plata,+Buenos+Aires,+Argentina&output=embed"
+                width="100%"
+                height="100%"
+                style={{ border: 0 }}
+                allowFullScreen
+                loading="lazy"
+                referrerPolicy="no-referrer-when-downgrade"
+              />
+            </div>
+
+            {/* Info */}
+            <div className="flex flex-col gap-5 justify-center">
+              <div className="flex items-start gap-3">
+                <div className="w-9 h-9 rounded-xl bg-green-50 border border-green-100 flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <svg className="w-4.5 h-4.5 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                  </svg>
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-gray-900">Dirección</p>
+                  <p className="text-sm text-gray-500 mt-0.5 leading-relaxed">
+                    Belisario Roldán 52<br />
+                    Mar del Plata, Buenos Aires
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-start gap-3">
+                <div className="w-9 h-9 rounded-xl bg-green-50 border border-green-100 flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <svg className="w-4.5 h-4.5 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-gray-900">Horarios</p>
+                  <p className="text-sm text-gray-500 mt-0.5">Lunes a domingo, 08:00 – 23:00</p>
+                </div>
+              </div>
+
+              <div className="flex items-start gap-3">
+                <div className="w-9 h-9 rounded-xl bg-green-50 border border-green-100 flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <svg className="w-4.5 h-4.5 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 8V5z" />
+                  </svg>
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-gray-900">Teléfono</p>
+                  <a
+                    href="tel:+5492235992495"
+                    className="text-sm text-green-700 hover:underline mt-0.5 block"
+                  >
+                    +54 9 2235 99-2495
+                  </a>
+                </div>
+              </div>
+
+              <a
+                href="https://www.google.com/maps/dir/?api=1&destination=Belisario+Rold%C3%A1n+52,+Mar+del+Plata,+Buenos+Aires,+Argentina"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center justify-center gap-2 bg-green-600 hover:bg-green-500 text-white px-6 py-3 rounded-xl font-semibold transition-colors shadow-sm text-sm mt-2"
+              >
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+                </svg>
+                Cómo llegar
+              </a>
+            </div>
+          </motion.div>
+        </div>
+      </section>
     </main>
   );
 }

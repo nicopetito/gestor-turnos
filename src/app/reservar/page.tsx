@@ -48,8 +48,6 @@ export default function ReservarPage() {
   };
 
   const handleBookingSuccess = () => {
-    setSelectedSlot(null);
-    setSelectedDuration(undefined);
     fetchAvailability(selectedDate);
   };
 

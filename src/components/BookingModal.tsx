@@ -33,6 +33,7 @@ export default function BookingModal({
   const [duration, setDuration]   = useState<Duration>(initialDuration ?? 60);
   const [name, setName]           = useState('');
   const [phone, setPhone]         = useState('');
+  const [phoneError, setPhoneError] = useState<string | null>(null);
   const [email, setEmail]         = useState('');
   const [loading, setLoading]     = useState(false);
   const [error, setError]         = useState<string | null>(null);
@@ -55,10 +56,27 @@ export default function BookingModal({
     setStep(2);
   };
 
+  const validatePhone = (value: string): string | null => {
+    const digits = value.replace(/\D/g, '');
+    if (!digits) return 'El teléfono es obligatorio.';
+    if (digits.length < 8) return 'Ingresá al menos 8 dígitos.';
+    if (digits.length > 15) return 'El número es demasiado largo.';
+    return null;
+  };
+
+  const handlePhoneBlur = () => {
+    if (phone.trim()) setPhoneError(validatePhone(phone));
+  };
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (!name.trim() || !phone.trim()) {
-      setError('Nombre y teléfono son obligatorios.');
+    if (!name.trim()) {
+      setError('El nombre es obligatorio.');
+      return;
+    }
+    const pErr = validatePhone(phone);
+    if (pErr) {
+      setPhoneError(pErr);
       return;
     }
 
@@ -102,68 +120,96 @@ export default function BookingModal({
   // ── Step 3: Success ───────────────────────────────────────────────────────
   if (step === 3) {
     return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm">
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
         <motion.div
-          initial={{ opacity: 0, scale: 0.95, y: 16 }}
+          initial={{ opacity: 0, scale: 0.92, y: 20 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
-          transition={{ duration: 0.25, ease: 'easeOut' }}
-          className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden"
+          transition={{ duration: 0.3, ease: 'easeOut' }}
+          className="bg-white rounded-3xl shadow-2xl w-full max-w-sm overflow-hidden"
         >
-          <div className="h-2 bg-gradient-to-r from-green-400 to-emerald-500" />
+          {/* Header verde */}
+          <div className="bg-gradient-to-br from-green-500 to-emerald-600 px-6 pt-8 pb-10 text-center relative">
+            {/* Checkmark animado */}
+            <motion.div
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              transition={{ delay: 0.15, type: 'spring', stiffness: 260, damping: 18 }}
+              className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4"
+            >
+              <motion.svg
+                initial={{ pathLength: 0 }}
+                animate={{ pathLength: 1 }}
+                transition={{ delay: 0.3, duration: 0.4, ease: 'easeOut' }}
+                className="w-8 h-8 text-white"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth={3}
+              >
+                <motion.path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M5 13l4 4L19 7"
+                />
+              </motion.svg>
+            </motion.div>
 
-          <div className="px-6 py-8 text-center space-y-5">
-            <div className="flex justify-center">
-              <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center">
-                <svg
-                  className="w-10 h-10 text-green-500"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  strokeWidth={2.5}
-                >
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                </svg>
-              </div>
+            <motion.h2
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.25, duration: 0.3 }}
+              className="text-2xl font-bold text-white"
+            >
+              ¡Listo, a jugar!
+            </motion.h2>
+            <motion.p
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.35, duration: 0.3 }}
+              className="text-white/75 text-sm mt-1"
+            >
+              Tu turno quedó confirmado
+            </motion.p>
+
+            {/* Onda decorativa */}
+            <div className="absolute bottom-0 left-0 right-0 h-4 bg-white" style={{ borderRadius: '100% 100% 0 0 / 100% 100% 0 0', transform: 'scaleX(1.1)' }} />
+          </div>
+
+          {/* Detalles */}
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4, duration: 0.3 }}
+            className="px-6 pt-5 pb-6 space-y-4"
+          >
+            {/* Chips de info */}
+            <div className="grid grid-cols-2 gap-2">
+              <InfoChip label="Fecha" value={dateLabel} capitalize />
+              <InfoChip label="Cancha" value={courtName} />
+              <InfoChip label="Horario" value={`${slot.time} – ${booking?.end_time?.slice(0, 5) ?? endTime}`} />
+              <InfoChip label="Duración" value={`${duration} min`} />
             </div>
 
-            <div>
-              <h2 className="text-2xl font-bold text-gray-900">¡Reserva confirmada!</h2>
-              <p className="text-sm text-gray-500 mt-1">Tu turno quedó registrado correctamente.</p>
-            </div>
-
-            <div className="bg-gray-50 border border-gray-200 rounded-xl p-5 text-left space-y-3">
-              <DetailRow icon="calendar" label="Fecha"    value={dateLabel} capitalize />
-              <DetailRow icon="court"    label="Cancha"   value={courtName} note={initialDuration ? 'asignada automáticamente' : undefined} />
-              <DetailRow
-                icon="clock"
-                label="Horario"
-                value={`${slot.time} – ${booking?.end_time?.slice(0, 5) ?? endTime}`}
-              />
-              <DetailRow icon="timer"  label="Duración" value={`${duration} minutos`} />
-              <DetailRow icon="user"   label="Nombre"   value={name} />
-              <DetailRow icon="phone"  label="Teléfono" value={phone} />
-            </div>
-
-            <p className="text-xs text-gray-400">
-              Guardá tu teléfono para poder ver o cancelar el turno desde{' '}
-              <span className="font-medium text-gray-500">Mis Reservas</span>.
+            <p className="text-xs text-center text-gray-400 pt-1">
+              Guardá tu número <span className="font-semibold text-gray-500">{phone}</span> para gestionar el turno desde{' '}
+              <span className="font-medium">Mis Reservas</span>.
             </p>
 
             <div className="flex flex-col gap-2 pt-1">
               <button
                 onClick={() => router.push(`/mis-reservas?phone=${encodeURIComponent(phone)}`)}
-                className="w-full bg-green-700 hover:bg-green-800 text-white font-medium py-2.5 rounded-xl text-sm transition-colors"
+                className="w-full bg-gray-900 hover:bg-gray-800 text-white font-semibold py-3 rounded-2xl text-sm transition-colors"
               >
                 Ver mis reservas
               </button>
               <button
                 onClick={onClose}
-                className="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-2.5 rounded-xl text-sm transition-colors"
+                className="w-full text-gray-500 hover:text-gray-700 font-medium py-2 text-sm transition-colors"
               >
                 Reservar otro turno
               </button>
             </div>
-          </div>
+          </motion.div>
         </motion.div>
       </div>
     );
@@ -317,13 +363,20 @@ export default function BookingModal({
                     <input
                       type="tel"
                       value={phone}
-                      onChange={(e) => setPhone(e.target.value)}
+                      onChange={(e) => { setPhone(e.target.value); if (phoneError) setPhoneError(null); }}
+                      onBlur={handlePhoneBlur}
                       placeholder="11-1234-5678"
-                      className="w-full border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-green-600 focus:border-transparent"
+                      className={[
+                        'w-full border rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:border-transparent',
+                        phoneError
+                          ? 'border-red-400 focus:ring-red-400'
+                          : 'border-gray-300 focus:ring-green-600',
+                      ].join(' ')}
                     />
-                    <p className="text-xs text-gray-400 mt-1">
-                      Usá este número para consultar o cancelar tu reserva.
-                    </p>
+                    {phoneError
+                      ? <p className="text-xs text-red-500 mt-1">{phoneError}</p>
+                      : <p className="text-xs text-gray-400 mt-1">Usá este número para consultar o cancelar tu reserva.</p>
+                    }
                   </div>
 
                   <div>
@@ -412,6 +465,26 @@ function Icon({ name, className }: { name: IconName; className?: string }) {
         </svg>
       );
   }
+}
+
+// ── InfoChip ──────────────────────────────────────────────────────────────────
+function InfoChip({
+  label,
+  value,
+  capitalize = false,
+}: {
+  label: string;
+  value: string;
+  capitalize?: boolean;
+}) {
+  return (
+    <div className="bg-gray-50 border border-gray-100 rounded-xl px-3 py-2.5">
+      <p className="text-[10px] font-semibold uppercase tracking-wider text-gray-400 mb-0.5">{label}</p>
+      <p className={`text-sm font-semibold text-gray-800 leading-tight ${capitalize ? 'capitalize' : ''}`}>
+        {value}
+      </p>
+    </div>
+  );
 }
 
 // ── Helper ────────────────────────────────────────────────────────────────────

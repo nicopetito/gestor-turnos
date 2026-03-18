@@ -32,6 +32,9 @@ export default function AdminBookingsPage() {
   const [cancellingId, setCancellingId]   = useState<string | null>(null);
   const [dayCounts, setDayCounts]         = useState<Record<string, number>>({});
   const [showCancelled, setShowCancelled] = useState(false);
+  const [filterPerson, setFilterPerson]   = useState('');
+  const [filterCourt, setFilterCourt]     = useState('');
+  const [filterHour, setFilterHour]       = useState('');
 
   const fetchBookings = useCallback(async (date: Date) => {
     setLoading(true);
@@ -95,8 +98,23 @@ export default function AdminBookingsPage() {
     }
   };
 
-  const confirmed = bookings.filter((b) => b.status === 'confirmed');
-  const others    = bookings.filter((b) => b.status !== 'confirmed');
+  const allConfirmed = bookings.filter((b) => b.status === 'confirmed');
+  const others       = bookings.filter((b) => b.status !== 'confirmed');
+
+  const confirmed = allConfirmed.filter((b) => {
+    if (filterPerson && !b.users?.name.toLowerCase().includes(filterPerson.toLowerCase()) && !b.users?.phone.includes(filterPerson)) return false;
+    if (filterCourt && b.courts?.name !== filterCourt) return false;
+    if (filterHour  && !b.start_time.startsWith(filterHour)) return false;
+    return true;
+  });
+
+  const courtNames  = [...new Set(allConfirmed.map((b) => b.courts?.name).filter(Boolean))] as string[];
+  const byCourtName = courtNames.reduce<Record<string, typeof confirmed>>((acc, name) => {
+    acc[name] = confirmed.filter((b) => b.courts?.name === name);
+    return acc;
+  }, {});
+
+  const hasFilters = filterPerson || filterCourt || filterHour;
 
   return (
     <div className="space-y-5">
@@ -186,8 +204,46 @@ export default function AdminBookingsPage() {
             transition={{ duration: 0.18 }}
             className="space-y-4"
           >
+            {/* Filtros */}
+            {allConfirmed.length > 0 && (
+              <div className="bg-white border border-gray-100 rounded-xl px-4 py-3 shadow-sm flex flex-wrap gap-2 items-center">
+                <input
+                  type="text"
+                  placeholder="Persona o teléfono"
+                  value={filterPerson}
+                  onChange={(e) => setFilterPerson(e.target.value)}
+                  className="flex-1 min-w-[140px] border border-gray-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-gray-300"
+                />
+                <select
+                  value={filterCourt}
+                  onChange={(e) => setFilterCourt(e.target.value)}
+                  className="border border-gray-200 rounded-lg px-3 py-1.5 text-sm text-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-300 bg-white"
+                >
+                  <option value="">Todas las canchas</option>
+                  {courtNames.map((name) => (
+                    <option key={name} value={name}>{name}</option>
+                  ))}
+                </select>
+                <input
+                  type="time"
+                  value={filterHour}
+                  onChange={(e) => setFilterHour(e.target.value)}
+                  className="border border-gray-200 rounded-lg px-3 py-1.5 text-sm text-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-300"
+                />
+                {hasFilters && (
+                  <button
+                    type="button"
+                    onClick={() => { setFilterPerson(''); setFilterCourt(''); setFilterHour(''); }}
+                    className="text-xs text-gray-400 hover:text-gray-600 transition-colors"
+                  >
+                    Limpiar
+                  </button>
+                )}
+              </div>
+            )}
+
             {/* Empty */}
-            {confirmed.length === 0 && (
+            {allConfirmed.length === 0 && (
               <div className="bg-white border border-gray-100 rounded-xl py-14 flex flex-col items-center gap-2 shadow-sm">
                 <svg className="w-8 h-8 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 9v7.5" />
@@ -196,81 +252,99 @@ export default function AdminBookingsPage() {
               </div>
             )}
 
-            {/* Confirmed — cards en mobile, tabla en desktop */}
-            {confirmed.length > 0 && (
-              <>
-                {/* Mobile: cards */}
-                <div className="md:hidden space-y-2">
-                  {confirmed.map((b) => (
-                    <div key={b.id} className="bg-white border border-gray-100 rounded-xl p-4 shadow-sm">
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="min-w-0">
-                          {/* Hora + cancha */}
-                          <div className="flex items-center gap-2 flex-wrap mb-1">
-                            <span className="font-mono text-base font-bold text-gray-900">
-                              {b.start_time.slice(0, 5)} – {b.end_time.slice(0, 5)}
-                            </span>
-                            <span className="text-xs bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full font-medium">
-                              {b.duration_minutes} min
-                            </span>
-                          </div>
-                          {/* Cancha */}
-                          <p className="text-xs text-green-600 font-semibold mb-2">{b.courts?.name}</p>
-                          {/* Cliente */}
-                          <p className="text-sm font-semibold text-gray-900">{b.users?.name}</p>
-                          <p className="text-sm text-gray-400 tabular-nums">{b.users?.phone}</p>
-                        </div>
-                        {/* Cancelar */}
-                        <button
-                          onClick={() => handleCancel(b.id, b.users?.name)}
-                          disabled={cancellingId === b.id}
-                          className="flex-shrink-0 text-xs border border-red-200 text-red-500 hover:bg-red-50 px-3 py-1.5 rounded-lg font-medium transition-colors disabled:opacity-50"
-                        >
-                          {cancellingId === b.id ? 'Cancelando…' : 'Cancelar'}
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
+            {/* Sin resultados con filtros activos */}
+            {allConfirmed.length > 0 && confirmed.length === 0 && (
+              <div className="bg-white border border-gray-100 rounded-xl py-10 flex flex-col items-center gap-2 shadow-sm">
+                <p className="text-sm text-gray-400">No hay reservas que coincidan con los filtros.</p>
+              </div>
+            )}
 
-                {/* Desktop: tabla */}
-                <div className="hidden md:block bg-white border border-gray-100 rounded-xl overflow-hidden shadow-sm">
-                  <table className="min-w-full text-sm">
-                    <thead>
-                      <tr className="border-b border-gray-100">
-                        {['Horario', 'Cancha', 'Cliente', 'Teléfono', 'Duración', ''].map((h) => (
-                          <th key={h} className="px-4 py-3 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">
-                            {h}
-                          </th>
-                        ))}
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-50">
-                      {confirmed.map((b) => (
-                        <tr key={b.id} className="hover:bg-gray-50/70 transition-colors group">
-                          <td className="px-4 py-3.5 font-mono text-sm font-medium text-gray-800">
-                            {b.start_time.slice(0, 5)} – {b.end_time.slice(0, 5)}
-                          </td>
-                          <td className="px-4 py-3.5 text-gray-600">{b.courts?.name}</td>
-                          <td className="px-4 py-3.5 font-medium text-gray-900">{b.users?.name}</td>
-                          <td className="px-4 py-3.5 text-gray-500 tabular-nums">{b.users?.phone}</td>
-                          <td className="px-4 py-3.5 text-gray-400">{b.duration_minutes} min</td>
-                          <td className="px-4 py-3.5 text-right">
+            {/* Agrupado por cancha */}
+            {confirmed.length > 0 && courtNames
+              .filter((name) => !filterCourt || name === filterCourt)
+              .map((courtName) => {
+                const rows = byCourtName[courtName] ?? [];
+                const filteredRows = rows.filter((b) => {
+                  if (filterPerson && !b.users?.name.toLowerCase().includes(filterPerson.toLowerCase()) && !b.users?.phone.includes(filterPerson)) return false;
+                  if (filterHour && !b.start_time.startsWith(filterHour)) return false;
+                  return true;
+                });
+                if (filteredRows.length === 0) return null;
+                return (
+                  <div key={courtName} className="bg-white border border-gray-100 rounded-xl overflow-hidden shadow-sm">
+                    {/* Header cancha */}
+                    <div className="flex items-center gap-2 px-4 py-2.5 border-b border-gray-100 bg-gray-50/60">
+                      <span className="w-2 h-2 rounded-full bg-green-500" />
+                      <span className="text-sm font-semibold text-gray-700">{courtName}</span>
+                      <span className="ml-auto text-xs text-gray-400 font-medium">{filteredRows.length} reserva{filteredRows.length !== 1 ? 's' : ''}</span>
+                    </div>
+
+                    {/* Mobile: cards */}
+                    <div className="md:hidden divide-y divide-gray-50">
+                      {filteredRows.map((b) => (
+                        <div key={b.id} className="p-4">
+                          <div className="flex items-start justify-between gap-3">
+                            <div className="min-w-0">
+                              <div className="flex items-center gap-2 flex-wrap mb-1">
+                                <span className="font-mono text-base font-bold text-gray-900">
+                                  {b.start_time.slice(0, 5)} – {b.end_time.slice(0, 5)}
+                                </span>
+                                <span className="text-xs bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full font-medium">
+                                  {b.duration_minutes} min
+                                </span>
+                              </div>
+                              <p className="text-sm font-semibold text-gray-900">{b.users?.name}</p>
+                              <p className="text-sm text-gray-400 tabular-nums">{b.users?.phone}</p>
+                            </div>
                             <button
                               onClick={() => handleCancel(b.id, b.users?.name)}
                               disabled={cancellingId === b.id}
-                              className="text-xs text-gray-400 hover:text-red-500 disabled:opacity-50 transition-colors font-medium opacity-0 group-hover:opacity-100"
+                              className="flex-shrink-0 text-xs border border-red-200 text-red-500 hover:bg-red-50 px-3 py-1.5 rounded-lg font-medium transition-colors disabled:opacity-50"
                             >
                               {cancellingId === b.id ? 'Cancelando…' : 'Cancelar'}
                             </button>
-                          </td>
-                        </tr>
+                          </div>
+                        </div>
                       ))}
-                    </tbody>
-                  </table>
-                </div>
-              </>
-            )}
+                    </div>
+
+                    {/* Desktop: tabla */}
+                    <table className="hidden md:table min-w-full text-sm">
+                      <thead>
+                        <tr className="border-b border-gray-50">
+                          {['Horario', 'Cliente', 'Teléfono', 'Duración', ''].map((h) => (
+                            <th key={h} className="px-4 py-2.5 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                              {h}
+                            </th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-gray-50">
+                        {filteredRows.map((b) => (
+                          <tr key={b.id} className="hover:bg-gray-50/70 transition-colors group">
+                            <td className="px-4 py-3.5 font-mono text-sm font-medium text-gray-800">
+                              {b.start_time.slice(0, 5)} – {b.end_time.slice(0, 5)}
+                            </td>
+                            <td className="px-4 py-3.5 font-medium text-gray-900">{b.users?.name}</td>
+                            <td className="px-4 py-3.5 text-gray-500 tabular-nums">{b.users?.phone}</td>
+                            <td className="px-4 py-3.5 text-gray-400">{b.duration_minutes} min</td>
+                            <td className="px-4 py-3.5 text-right">
+                              <button
+                                onClick={() => handleCancel(b.id, b.users?.name)}
+                                disabled={cancellingId === b.id}
+                                className="text-xs text-gray-400 hover:text-red-500 disabled:opacity-50 transition-colors font-medium opacity-0 group-hover:opacity-100"
+                              >
+                                {cancellingId === b.id ? 'Cancelando…' : 'Cancelar'}
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                );
+              })
+            }
 
             {/* Cancelled — accordion animado */}
             {others.length > 0 && (
