@@ -39,7 +39,13 @@ export async function GET(request: NextRequest) {
  * Body: { adminKey, reason? }
  */
 export async function DELETE(request: NextRequest) {
-  const { adminKey, bookingId } = await request.json();
+  let body: { adminKey: string; bookingId: string };
+  try {
+    body = await request.json();
+  } catch {
+    return NextResponse.json({ error: 'JSON inválido' }, { status: 400 });
+  }
+  const { adminKey, bookingId } = body;
 
   if (adminKey !== process.env.ADMIN_SECRET_KEY) {
     return NextResponse.json({ error: 'No autorizado' }, { status: 401 });

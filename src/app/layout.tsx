@@ -2,13 +2,28 @@ import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import Link from 'next/link';
 import Image from 'next/image';
+import NavLink from '@/components/NavLink';
 import './globals.css';
 
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: 'Club Atlético Once Unidos',
-  description: 'Reservá tu turno en las canchas de Club Atlético Once Unidos',
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'),
+  title: {
+    default: 'Club Atlético Once Unidos',
+    template: '%s | Club Atlético Once Unidos',
+  },
+  description:
+    'Reservá tu turno en las canchas de tenis de Club Atlético Once Unidos. Mar del Plata, Buenos Aires. Lunes a domingo, 08:00 a 23:00.',
+  openGraph: {
+    siteName: 'Club Atlético Once Unidos',
+    title: 'Club Atlético Once Unidos — Canchas de Tenis',
+    description:
+      'Reservá tu turno en línea. Sin registro, sin contraseña. Solo tu nombre y teléfono.',
+    images: [{ url: '/imagenes/canchas-panoramica.jpg', width: 1200, height: 630 }],
+    locale: 'es_AR',
+    type: 'website',
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -104,17 +119,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         </footer>
       </body>
     </html>
-  );
-}
-
-function NavLink({ href, children }: { href: string; children: React.ReactNode }) {
-  return (
-    <Link
-      href={href}
-      className="text-sm text-gray-600 hover:text-green-700 font-medium px-3 py-2 rounded-lg hover:bg-green-50 transition-colors"
-    >
-      {children}
-    </Link>
   );
 }
 

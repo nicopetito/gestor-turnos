@@ -116,6 +116,44 @@ export async function notifyBookingConfirmed(params: {
   });
 }
 
+export async function notifyBookingReminder(params: {
+  name: string;
+  email: string;
+  date: string;
+  courtName: string;
+  startTime: string;
+  endTime: string;
+  durationMinutes: number;
+}) {
+  const { name, email, date, courtName, startTime, endTime, durationMinutes } = params;
+  const dateLabel = format(parseISO(date), "EEEE d 'de' MMMM yyyy", { locale: es });
+
+  const html = base(`
+    ${headerBar('#2563eb', '⏰', 'Recordatorio de turno')}
+    <tr><td style="padding:28px;">
+      <p style="margin:0 0 20px;font-size:15px;color:#374151;">
+        Hola <strong>${name}</strong>, te recordamos que mañana tenés un turno reservado.
+      </p>
+      <table width="100%" cellpadding="0" cellspacing="0">
+        ${detailRow('Fecha', `<span style="text-transform:capitalize">${dateLabel}</span>`)}
+        ${detailRow('Cancha', courtName)}
+        ${detailRow('Horario', `${startTime} – ${endTime}`)}
+        ${detailRow('Duración', `${durationMinutes} minutos`)}
+      </table>
+      ${ctaButton(`${APP_URL()}/mis-reservas`, 'Ver mis reservas', '#2563eb')}
+      <p style="margin-top:14px;font-size:12px;color:#9ca3af;text-align:center;">
+        Si necesitás cancelar, hacelo antes de las ${startTime} de hoy para evitar cancelación tardía.
+      </p>
+    </td></tr>
+  `);
+
+  return sendEmail({
+    to:      email,
+    subject: `⏰ Recordatorio: turno mañana — ${courtName} — ${startTime}`,
+    html,
+  });
+}
+
 export async function notifyBookingCancelled(params: {
   name: string;
   email: string;

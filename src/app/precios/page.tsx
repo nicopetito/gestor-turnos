@@ -1,6 +1,18 @@
+import type { Metadata } from 'next';
 import Image from 'next/image';
 import { createServerSupabase } from '@/lib/supabase/server';
 import type { Price } from '@/types';
+
+export const metadata: Metadata = {
+  title: 'Precios',
+  description:
+    'Lista de precios para socios y no socios. Turnos de 1 a 2 horas con y sin iluminación en Club Atlético Once Unidos, Mar del Plata.',
+  openGraph: {
+    title: 'Precios · Once Unidos',
+    description: 'Socios y no socios. Turnos de 60, 90 o 120 min, con y sin luz.',
+    images: ['/imagenes/cancha-accion.jpg'],
+  },
+};
 
 const DURATION_LABELS: Record<number, string> = {
   60:  '1 hora',
@@ -128,11 +140,11 @@ function PriceRow({
 }) {
   return (
     <div className="flex items-center justify-between px-5 py-3.5">
-      <span className={`text-sm ${withLight ? 'text-white/55' : 'text-white/90 font-medium'}`}>
+      <span className={`text-sm font-medium ${withLight ? 'text-yellow-300' : 'text-white'}`}>
         {withLight && <span className="mr-1.5">💡</span>}
         {label}
       </span>
-      <span className={`text-sm font-bold tabular-nums ${withLight ? 'text-white/60' : 'text-white'}`}>
+      <span className={`text-sm font-bold tabular-nums ${withLight ? 'text-yellow-300' : 'text-white'}`}>
         {formatPrice(price)}
       </span>
     </div>

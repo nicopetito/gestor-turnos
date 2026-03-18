@@ -259,7 +259,7 @@ export async function POST(request: NextRequest) {
       startTime:       start_time.slice(0, 5),
       endTime:         end_time,
       durationMinutes: duration_minutes,
-    });
+    }).catch((err) => console.error('[email] notifyBookingConfirmed error:', err));
   }
 
 

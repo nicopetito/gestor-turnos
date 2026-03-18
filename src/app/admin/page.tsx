@@ -30,6 +30,7 @@ export default function AdminBookingsPage() {
   const [loading, setLoading]             = useState(false);
   const [error, setError]                 = useState<string | null>(null);
   const [cancellingId, setCancellingId]   = useState<string | null>(null);
+  const [cancelError, setCancelError]     = useState<string | null>(null);
   const [dayCounts, setDayCounts]         = useState<Record<string, number>>({});
   const [showCancelled, setShowCancelled] = useState(false);
   const [filterPerson, setFilterPerson]   = useState('');
@@ -80,6 +81,7 @@ export default function AdminBookingsPage() {
   const handleCancel = async (bookingId: string, clientName: string) => {
     if (!confirm(`¿Cancelar la reserva de ${clientName}?`)) return;
     setCancellingId(bookingId);
+    setCancelError(null);
     try {
       const res = await fetch('/api/admin/bookings', {
         method:  'DELETE',
@@ -88,14 +90,38 @@ export default function AdminBookingsPage() {
       });
       if (!res.ok) {
         const data = await res.json();
-        setError(data.error ?? 'Error al cancelar');
+        setCancelError(data.error ?? 'Error al cancelar');
+      } else {
+        fetchBookings(selectedDate);
       }
     } catch {
-      setError('Error de red al cancelar');
+      setCancelError('Error de red al cancelar');
     } finally {
       setCancellingId(null);
-      fetchBookings(selectedDate);
     }
+  };
+
+  const downloadCSV = () => {
+    const rows: string[][] = [
+      ['Horario inicio', 'Horario fin', 'Cancha', 'Cliente', 'Teléfono', 'Duración (min)', 'Estado'],
+      ...bookings.map((b) => [
+        b.start_time.slice(0, 5),
+        b.end_time.slice(0, 5),
+        b.courts?.name ?? '',
+        b.users?.name ?? '',
+        b.users?.phone ?? '',
+        String(b.duration_minutes),
+        STATUS_CONFIG[b.status]?.label ?? b.status,
+      ]),
+    ];
+    const csv  = rows.map((r) => r.map((c) => `"${c}"`).join(',')).join('\n');
+    const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    a.href     = url;
+    a.download = `reservas-${format(selectedDate, 'yyyy-MM-dd')}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
   };
 
   const allConfirmed = bookings.filter((b) => b.status === 'confirmed');
@@ -120,11 +146,23 @@ export default function AdminBookingsPage() {
     <div className="space-y-5">
 
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1">
-        <h1 className="text-xl font-bold text-gray-900">Reservas del día</h1>
-        <span className="text-sm text-gray-400 capitalize">
-          {format(selectedDate, "EEEE d 'de' MMMM", { locale: es })}
-        </span>
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div>
+          <h1 className="text-xl font-bold text-gray-900">Reservas del día</h1>
+          <span className="text-sm text-gray-400 capitalize">
+            {format(selectedDate, "EEEE d 'de' MMMM", { locale: es })}
+          </span>
+        </div>
+        <button
+          onClick={downloadCSV}
+          disabled={bookings.length === 0}
+          className="flex items-center gap-1.5 text-xs font-medium border border-gray-200 bg-white hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed text-gray-600 px-3 py-2 rounded-xl transition-colors shadow-sm"
+        >
+          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+          </svg>
+          Exportar CSV
+        </button>
       </div>
 
       {/* Day selector */}
@@ -190,6 +228,11 @@ export default function AdminBookingsPage() {
       {error && (
         <div className="bg-red-50 border border-red-200 text-red-700 rounded-xl px-4 py-3 text-sm">
           {error}
+        </div>
+      )}
+      {cancelError && (
+        <div className="bg-red-50 border border-red-200 text-red-700 rounded-xl px-4 py-3 text-sm">
+          {cancelError}
         </div>
       )}
 
