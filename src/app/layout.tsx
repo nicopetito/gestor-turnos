@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import Link from 'next/link';
 import Image from 'next/image';
+import Script from 'next/script';
 import NavLink from '@/components/NavLink';
 import './globals.css';
 
@@ -15,6 +16,25 @@ export const metadata: Metadata = {
   },
   description:
     'Reservá tu turno en las canchas de tenis de Club Atlético Once Unidos. Mar del Plata, Buenos Aires. Lunes a domingo, 08:00 a 23:00.',
+  manifest: '/manifest.json',
+  themeColor: '#16a34a',
+  viewport: {
+    width: 'device-width',
+    initialScale: 1,
+    maximumScale: 1,
+  },
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'default',
+    title: 'Once Unidos',
+  },
+  icons: {
+    icon: [
+      { url: '/icons/icon-192.png', sizes: '192x192', type: 'image/png' },
+      { url: '/icons/icon-512.png', sizes: '512x512', type: 'image/png' },
+    ],
+    apple: '/icons/apple-touch-icon.png',
+  },
   openGraph: {
     siteName: 'Club Atlético Once Unidos',
     title: 'Club Atlético Once Unidos — Canchas de Tenis',
@@ -29,6 +49,9 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="es">
+      <head>
+        <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+      </head>
       <body className={`${inter.className} bg-gray-50 min-h-screen flex flex-col`}>
         <header className="bg-white border-b border-gray-200 sticky top-0 z-40 shadow-sm">
           <nav className="max-w-[1280px] mx-auto px-4 sm:px-8 lg:px-16 h-14 flex items-center justify-between">
@@ -55,6 +78,22 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         </header>
 
         <div className="flex-1">{children}</div>
+
+        <Script
+          id="register-sw"
+          strategy="afterInteractive"
+          dangerouslySetInnerHTML={{
+            __html: `
+              if ('serviceWorker' in navigator) {
+                window.addEventListener('load', function() {
+                  navigator.serviceWorker.register('/sw.js').catch(function(err) {
+                    console.error('SW registration failed:', err);
+                  });
+                });
+              }
+            `,
+          }}
+        />
 
         <footer className="bg-gray-900 text-gray-300">
           <div className="max-w-[1280px] mx-auto px-4 sm:px-8 lg:px-16 py-10 grid grid-cols-1 sm:grid-cols-3 gap-8">
