@@ -1,16 +1,15 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { useAdminKey } from '../layout';
 import type { Duration, FixedBookingSuspension } from '@/types';
 
 const WEEKDAYS = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
 const DURATIONS: Duration[] = [60, 90, 120];
-const COURTS = [
-  { id: 1, name: 'Cancha 1' },
-  { id: 2, name: 'Cancha 2' },
-  { id: 3, name: 'Cancha 3' },
-];
+
+interface Court {
+  id: number;
+  name: string;
+}
 
 // Generate 30-min time slots from 08:00 to 22:30
 function timeSlots(): string[] {
@@ -38,10 +37,9 @@ interface FixedBookingRow {
 }
 
 export default function AdminClasesPage() {
-  const { adminKey } = useAdminKey();
-
   const [clases, setClases]       = useState<FixedBookingRow[]>([]);
   const [suspensions, setSuspensions] = useState<FixedBookingSuspension[]>([]);
+  const [courts, setCourts]       = useState<Court[]>([]);
   const [loading, setLoading]     = useState(false);
   const [deletingId, setDeletingId] = useState<number | null>(null);
   const [error, setError]         = useState<string | null>(null);
@@ -67,21 +65,28 @@ export default function AdminClasesPage() {
     setLoading(true);
     setError(null);
     try {
-      const [clasesRes, suspRes] = await Promise.all([
-        fetch(`/api/admin/fixed-bookings?adminKey=${encodeURIComponent(adminKey)}`),
-        fetch(`/api/admin/fixed-bookings/suspensions?adminKey=${encodeURIComponent(adminKey)}`),
+      const [clasesRes, suspRes, courtsRes] = await Promise.all([
+        fetch('/api/admin/fixed-bookings'),
+        fetch('/api/admin/fixed-bookings/suspensions'),
+        fetch('/api/admin/courts'),
       ]);
-      const clasesData = await clasesRes.json();
-      const suspData   = await suspRes.json();
+      const clasesData  = await clasesRes.json();
+      const suspData    = await suspRes.json();
+      const courtsData  = await courtsRes.json();
       if (!clasesRes.ok) throw new Error(clasesData.error);
       setClases(clasesData.fixedBookings ?? []);
       setSuspensions(suspData.suspensions ?? []);
+      const fetchedCourts: Court[] = courtsData.courts ?? [];
+      setCourts(fetchedCourts);
+      if (fetchedCourts.length > 0) {
+        setForm((f) => ({ ...f, court_id: fetchedCourts[0].id }));
+      }
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Error al cargar');
     } finally {
       setLoading(false);
     }
-  }, [adminKey]);
+  }, []);
 
   useEffect(() => { fetchClases(); }, [fetchClases]);
 
@@ -96,7 +101,7 @@ export default function AdminClasesPage() {
   const handleDelete = async (id: number) => {
     setDeletingId(id);
     const res = await fetch(
-      `/api/admin/fixed-bookings?adminKey=${encodeURIComponent(adminKey)}&id=${id}`,
+      `/api/admin/fixed-bookings?id=${id}`,
       { method: 'DELETE' },
     );
     setDeletingId(null);
@@ -115,7 +120,7 @@ export default function AdminClasesPage() {
     const res = await fetch(`/api/admin/fixed-bookings/${id}/suspend`, {
       method:  'POST',
       headers: { 'Content-Type': 'application/json' },
-      body:    JSON.stringify({ adminKey, weeks: suspendingWeeks }),
+      body:    JSON.stringify({ weeks: suspendingWeeks }),
     });
     const data = await res.json();
     setSuspendLoading(false);
@@ -131,7 +136,7 @@ export default function AdminClasesPage() {
 
   const handleReactivate = async (id: number) => {
     const res = await fetch(
-      `/api/admin/fixed-bookings/${id}/suspend?adminKey=${encodeURIComponent(adminKey)}`,
+      `/api/admin/fixed-bookings/${id}/suspend`,
       { method: 'DELETE' },
     );
     if (res.ok) {
@@ -152,7 +157,7 @@ export default function AdminClasesPage() {
     const res = await fetch('/api/admin/fixed-bookings', {
       method:  'POST',
       headers: { 'Content-Type': 'application/json' },
-      body:    JSON.stringify({ adminKey, ...form }),
+      body:    JSON.stringify({ ...form }),
     });
     const data = await res.json();
     setSubmitting(false);
@@ -193,7 +198,7 @@ export default function AdminClasesPage() {
               onChange={(e) => setForm((f) => ({ ...f, court_id: Number(e.target.value) }))}
               className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900"
             >
-              {COURTS.map((c) => (
+              {courts.map((c) => (
                 <option key={c.id} value={c.id}>{c.name}</option>
               ))}
             </select>

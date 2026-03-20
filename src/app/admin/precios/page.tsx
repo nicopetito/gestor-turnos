@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { useAdminKey } from '../layout';
 import type { Price } from '@/types';
 
 const DURATION_LABELS: Record<number, string> = {
@@ -13,8 +12,6 @@ const DURATION_LABELS: Record<number, string> = {
 type PriceRow = Price & { draft: string };
 
 export default function AdminPreciosPage() {
-  const { adminKey } = useAdminKey();
-
   const [rows, setRows]               = useState<PriceRow[]>([]);
   const [luzStartTime, setLuzStartTime] = useState('19:00');
   const [loading, setLoading]         = useState(true);
@@ -25,7 +22,7 @@ export default function AdminPreciosPage() {
   const fetchPrices = useCallback(async () => {
     setLoading(true);
     try {
-      const res  = await fetch(`/api/admin/prices?adminKey=${encodeURIComponent(adminKey)}`);
+      const res  = await fetch('/api/admin/prices');
       const data = await res.json();
       setRows((data.prices ?? []).map((p: Price) => ({ ...p, draft: String(p.amount) })));
       setLuzStartTime(data.luzStartTime ?? '19:00');
@@ -34,7 +31,7 @@ export default function AdminPreciosPage() {
     } finally {
       setLoading(false);
     }
-  }, [adminKey]);
+  }, []);
 
   useEffect(() => { fetchPrices(); }, [fetchPrices]);
 
@@ -47,7 +44,7 @@ export default function AdminPreciosPage() {
       const res = await fetch('/api/admin/prices', {
         method:  'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify({ adminKey, prices, luzStartTime }),
+        body:    JSON.stringify({ prices, luzStartTime }),
       });
       if (!res.ok) throw new Error('Error al guardar');
       setSaved(true);

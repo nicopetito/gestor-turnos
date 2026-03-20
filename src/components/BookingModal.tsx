@@ -5,6 +5,7 @@ import { format, parseISO } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
+import { parsePhoneNumberFromString } from 'libphonenumber-js';
 import type { Booking, CourtAvailability, Duration, SlotInfo } from '@/types';
 import { isDurationAvailable, minutesToTime, timeToMinutes } from '@/lib/slots';
 
@@ -34,6 +35,7 @@ export default function BookingModal({
   const [name, setName]           = useState('');
   const [phone, setPhone]         = useState('');
   const [phoneError, setPhoneError] = useState<string | null>(null);
+  const [phoneValid, setPhoneValid] = useState(false);
   const [email, setEmail]         = useState('');
   const [loading, setLoading]     = useState(false);
   const [error, setError]         = useState<string | null>(null);
@@ -57,15 +59,19 @@ export default function BookingModal({
   };
 
   const validatePhone = (value: string): string | null => {
-    const digits = value.replace(/\D/g, '');
-    if (!digits) return 'El teléfono es obligatorio.';
-    if (digits.length < 8) return 'Ingresá al menos 8 dígitos.';
-    if (digits.length > 15) return 'El número es demasiado largo.';
+    if (!value.trim()) return 'El teléfono es obligatorio.';
+    // Intentar parsear con código de país AR por defecto
+    const parsed = parsePhoneNumberFromString(value, 'AR');
+    if (!parsed || !parsed.isValid()) return 'Ingresá un número de teléfono válido.';
     return null;
   };
 
   const handlePhoneBlur = () => {
-    if (phone.trim()) setPhoneError(validatePhone(phone));
+    if (phone.trim()) {
+      const err = validatePhone(phone);
+      setPhoneError(err);
+      setPhoneValid(!err);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -77,6 +83,7 @@ export default function BookingModal({
     const pErr = validatePhone(phone);
     if (pErr) {
       setPhoneError(pErr);
+      setPhoneValid(false);
       return;
     }
 
@@ -360,21 +367,34 @@ export default function BookingModal({
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       Teléfono
                     </label>
-                    <input
-                      type="tel"
-                      value={phone}
-                      onChange={(e) => { setPhone(e.target.value); if (phoneError) setPhoneError(null); }}
-                      onBlur={handlePhoneBlur}
-                      placeholder="11-1234-5678"
-                      className={[
-                        'w-full border rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:border-transparent',
-                        phoneError
-                          ? 'border-red-400 focus:ring-red-400'
-                          : 'border-gray-300 focus:ring-green-600',
-                      ].join(' ')}
-                    />
+                    <div className="relative">
+                      <input
+                        type="tel"
+                        value={phone}
+                        onChange={(e) => { setPhone(e.target.value); setPhoneError(null); setPhoneValid(false); }}
+                        onBlur={handlePhoneBlur}
+                        placeholder="11-1234-5678"
+                        className={[
+                          'w-full border rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:border-transparent pr-10',
+                          phoneError
+                            ? 'border-red-400 focus:ring-red-400'
+                            : phoneValid
+                            ? 'border-green-500 focus:ring-green-500'
+                            : 'border-gray-300 focus:ring-green-600',
+                        ].join(' ')}
+                      />
+                      {phoneValid && (
+                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-green-500">
+                          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                          </svg>
+                        </span>
+                      )}
+                    </div>
                     {phoneError
                       ? <p className="text-xs text-red-500 mt-1">{phoneError}</p>
+                      : phoneValid
+                      ? <p className="text-xs text-green-600 mt-1">Número válido.</p>
                       : <p className="text-xs text-gray-400 mt-1">Usá este número para consultar o cancelar tu reserva.</p>
                     }
                   </div>
@@ -422,51 +442,6 @@ export default function BookingModal({
   );
 }
 
-// ── Icons ─────────────────────────────────────────────────────────────────────
-type IconName = 'calendar' | 'court' | 'clock' | 'timer' | 'user' | 'phone';
-
-function Icon({ name, className }: { name: IconName; className?: string }) {
-  const cls = className ?? 'w-4 h-4 text-gray-400';
-  switch (name) {
-    case 'calendar':
-      return (
-        <svg className={cls} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-        </svg>
-      );
-    case 'court':
-      return (
-        <svg className={cls} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M3 12h18M12 3v18M3 3h18v18H3z" />
-        </svg>
-      );
-    case 'clock':
-      return (
-        <svg className={cls} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-        </svg>
-      );
-    case 'timer':
-      return (
-        <svg className={cls} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6l4 2m6-2a10 10 0 11-20 0 10 10 0 0120 0z" />
-        </svg>
-      );
-    case 'user':
-      return (
-        <svg className={cls} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-        </svg>
-      );
-    case 'phone':
-      return (
-        <svg className={cls} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 8V5z" />
-        </svg>
-      );
-  }
-}
-
 // ── InfoChip ──────────────────────────────────────────────────────────────────
 function InfoChip({
   label,
@@ -487,34 +462,3 @@ function InfoChip({
   );
 }
 
-// ── Helper ────────────────────────────────────────────────────────────────────
-function DetailRow({
-  icon,
-  label,
-  value,
-  capitalize = false,
-  note,
-}: {
-  icon: IconName;
-  label: string;
-  value: string;
-  capitalize?: boolean;
-  note?: string;
-}) {
-  return (
-    <div className="flex items-start gap-3">
-      <span className="mt-0.5 flex-shrink-0">
-        <Icon name={icon} className="w-4 h-4 text-gray-400" />
-      </span>
-      <div className="flex-1 flex justify-between gap-2">
-        <span className="text-xs text-gray-500">{label}</span>
-        <div className="text-right">
-          <span className={`text-sm font-medium text-gray-800 ${capitalize ? 'capitalize' : ''}`}>
-            {value}
-          </span>
-          {note && <p className="text-[10px] text-gray-400 mt-0.5">{note}</p>}
-        </div>
-      </div>
-    </div>
-  );
-}

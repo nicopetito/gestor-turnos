@@ -1,12 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { addDays, format, startOfDay } from 'date-fns';
 import { createServerSupabase } from '@/lib/supabase/server';
+import { validateAdminSession, unauthorizedResponse } from '@/lib/admin-auth';
 
 const VALID_WEEKS = [1, 2, 3];
 
 /**
  * POST /api/admin/fixed-bookings/[id]/suspend
- * Body: { adminKey, weeks: 1 | 2 | 3 }
+ * Body: { weeks: 1 | 2 | 3 }
  *
  * Suspends a fixed booking starting today for N weeks.
  * During that period the slot is free for regular bookings.
@@ -15,19 +16,17 @@ export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
+  if (!validateAdminSession(request)) return unauthorizedResponse();
+
   const { id } = await params;
-  let body: { adminKey: string; weeks: number };
+  let body: { weeks: number };
   try {
     body = await request.json();
   } catch {
     return NextResponse.json({ error: 'JSON inválido' }, { status: 400 });
   }
 
-  const { adminKey, weeks } = body;
-
-  if (adminKey !== process.env.ADMIN_SECRET_KEY) {
-    return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
-  }
+  const { weeks } = body;
 
   if (!VALID_WEEKS.includes(weeks)) {
     return NextResponse.json(
@@ -72,7 +71,7 @@ export async function POST(
 }
 
 /**
- * DELETE /api/admin/fixed-bookings/[id]/suspend?adminKey=KEY
+ * DELETE /api/admin/fixed-bookings/[id]/suspend
  *
  * Removes all active suspensions for a fixed booking (reactivates it).
  */
@@ -80,12 +79,9 @@ export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
-  const { id } = await params;
-  const adminKey = new URL(request.url).searchParams.get('adminKey');
+  if (!validateAdminSession(request)) return unauthorizedResponse();
 
-  if (adminKey !== process.env.ADMIN_SECRET_KEY) {
-    return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
-  }
+  const { id } = await params;
 
   const fixedBookingId = Number(id);
   if (!fixedBookingId) {

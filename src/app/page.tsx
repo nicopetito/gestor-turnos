@@ -126,7 +126,7 @@ export default function HomePage() {
             {[
               { title: '3 Canchas', desc: 'de tenis' },
               { title: '60–120 min', desc: 'por turno' },
-              { title: '7 días', desc: 'por adelantado' },
+              { title: 'Hasta 7 días', desc: 'de anticipación' },
             ].map(({ title, desc }) => (
               <div
                 key={title}

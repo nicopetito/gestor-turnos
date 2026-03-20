@@ -53,12 +53,14 @@ const CELL_STYLES: Record<string, string> = {
   booked:      'bg-indigo-500/20 border-indigo-400/40 text-indigo-200 cursor-not-allowed',
   fixed:       'bg-indigo-500/20 border-indigo-400/40 text-indigo-200 cursor-not-allowed',
   unavailable: 'bg-indigo-500/20 border-indigo-400/40 text-indigo-200 cursor-not-allowed',
+  maintenance: 'bg-amber-500/20 border-amber-400/40 text-amber-200 cursor-not-allowed',
 };
 
 const STATUS_LABEL: Record<string, string> = {
   available:   'Libre',
   booked:      'Ocupado',
   unavailable: '—',
+  maintenance: 'Mantenimiento',
 };
 
 const DURATIONS: Duration[] = [60, 90, 120];
@@ -260,9 +262,10 @@ export default function CourtGrid({ availability, selectedDate, onSlotClick }: C
           {/* Legend */}
           <div className="flex flex-wrap gap-4 px-4 py-3 border-t border-white/10 bg-white/10 text-xs text-white/50">
             {[
-              { dot: 'bg-green-500',  label: 'Disponible' },
-              { dot: 'bg-amber-400',  label: 'Disponible parcial' },
-              { dot: 'bg-indigo-400', label: 'Ocupado'    },
+              { dot: 'bg-green-500',  label: 'Disponible'        },
+              { dot: 'bg-amber-400',  label: 'Disponible parcial'},
+              { dot: 'bg-indigo-400', label: 'Ocupado'           },
+              { dot: 'bg-amber-600',  label: 'Mantenimiento'     },
             ].map(({ dot, label }) => (
               <span key={label} className="flex items-center gap-1.5">
                 <span className={`w-2 h-2 rounded-full ${dot}`} />
@@ -319,6 +322,8 @@ export default function CourtGrid({ availability, selectedDate, onSlotClick }: C
                             ? slot.label
                             : slot.status === 'booked'
                             ? 'Horario ocupado'
+                            : slot.status === 'maintenance'
+                            ? 'Mantenimiento'
                             : undefined
                         }
                       >
@@ -337,8 +342,9 @@ export default function CourtGrid({ availability, selectedDate, onSlotClick }: C
 
       <div className="flex flex-wrap gap-4 px-4 py-3 border-t border-white/10 bg-white/10 text-xs text-white/50">
         {[
-          { color: 'bg-green-500/25 border-green-400/40',   label: 'Disponible' },
-          { color: 'bg-indigo-500/25 border-indigo-400/40', label: 'Ocupado'    },
+          { color: 'bg-green-500/25 border-green-400/40',   label: 'Disponible'    },
+          { color: 'bg-indigo-500/25 border-indigo-400/40', label: 'Ocupado'       },
+          { color: 'bg-amber-500/25 border-amber-400/40',   label: 'Mantenimiento' },
         ].map(({ color, label }) => (
           <span key={label} className="flex items-center gap-1.5">
             <span className={`w-3 h-3 rounded border ${color} inline-block`} />

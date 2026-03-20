@@ -1,63 +1,58 @@
 'use client';
 
-import { useState, useEffect, createContext, useContext } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
-// ---- Admin key context ----
-const AdminContext = createContext<{ adminKey: string }>({ adminKey: '' });
-export const useAdminKey = () => useContext(AdminContext);
-
-const STORAGE_KEY = 'admin_key';
-
 // ---- Nav links ----
 const NAV_LINKS = [
-  { href: '/admin',              label: 'Reservas'     },
-  { href: '/admin/clases',       label: 'Clases fijas' },
-  { href: '/admin/usuarios',     label: 'Usuarios'     },
-  { href: '/admin/precios',      label: 'Precios'      },
-  { href: '/admin/estadisticas', label: 'Estadísticas' },
+  { href: '/admin',               label: 'Reservas'      },
+  { href: '/admin/clases',        label: 'Clases fijas'  },
+  { href: '/admin/usuarios',      label: 'Usuarios'      },
+  { href: '/admin/mantenimiento', label: 'Mantenimiento' },
+  { href: '/admin/precios',       label: 'Precios'       },
+  { href: '/admin/estadisticas',  label: 'Estadísticas'  },
 ];
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
-  const [adminKey, setAdminKey] = useState('');
+  const [loggedIn, setLoggedIn] = useState(false);
   const [input, setInput]       = useState('');
   const [error, setError]       = useState('');
   const [checking, setChecking] = useState(true);
   const pathname = usePathname();
 
-  // Load persisted key on mount
+  // Verifica sesión en el servidor al montar (cookie httpOnly)
   useEffect(() => {
-    const stored = sessionStorage.getItem(STORAGE_KEY);
-    if (stored) setAdminKey(stored);
-    setChecking(false);
+    fetch('/api/admin/auth')
+      .then((res) => { if (res.ok) setLoggedIn(true); })
+      .finally(() => setChecking(false));
   }, []);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
-    // Verify key against a quick admin endpoint
-    const res = await fetch(
-      `/api/admin/bookings?adminKey=${encodeURIComponent(input)}&date=2000-01-01`,
-    );
-    if (res.status === 401) {
+    const res = await fetch('/api/admin/auth', {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ key: input }),
+    });
+    if (!res.ok) {
       setError('Clave incorrecta.');
       return;
     }
-    sessionStorage.setItem(STORAGE_KEY, input);
-    setAdminKey(input);
+    setLoggedIn(true);
   };
 
-  const handleLogout = () => {
-    sessionStorage.removeItem(STORAGE_KEY);
-    setAdminKey('');
+  const handleLogout = async () => {
+    await fetch('/api/admin/auth', { method: 'DELETE' });
+    setLoggedIn(false);
     setInput('');
   };
 
   if (checking) return null;
 
   // --- Login gate ---
-  if (!adminKey) {
+  if (!loggedIn) {
     return (
       <div className="min-h-screen bg-gray-900 flex items-center justify-center p-4">
         <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm p-8">
@@ -103,49 +98,47 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   // --- Admin shell ---
   return (
-    <AdminContext.Provider value={{ adminKey }}>
-      <div className="min-h-screen bg-gray-50">
-        {/* Top bar */}
-        <header className="bg-gray-900 text-white sticky top-0 z-40">
-          {/* Row 1: marca + acciones */}
-          <div className="max-w-6xl mx-auto px-4 h-11 flex items-center justify-between border-b border-white/5">
-            <span className="font-bold text-sm tracking-wide uppercase text-gray-300">Admin</span>
-            <div className="flex items-center gap-3">
-              <Link href="/" className="text-xs text-gray-400 hover:text-white transition-colors">
-                ← Sitio
-              </Link>
-              <button
-                onClick={handleLogout}
-                className="text-xs text-gray-400 hover:text-red-400 transition-colors"
+    <div className="min-h-screen bg-gray-50">
+      {/* Top bar */}
+      <header className="bg-gray-900 text-white sticky top-0 z-40">
+        {/* Row 1: marca + acciones */}
+        <div className="max-w-6xl mx-auto px-4 h-11 flex items-center justify-between border-b border-white/5">
+          <span className="font-bold text-sm tracking-wide uppercase text-gray-300">Admin</span>
+          <div className="flex items-center gap-3">
+            <Link href="/" className="text-xs text-gray-400 hover:text-white transition-colors">
+              ← Sitio
+            </Link>
+            <button
+              onClick={handleLogout}
+              className="text-xs text-gray-400 hover:text-red-400 transition-colors"
+            >
+              Salir
+            </button>
+          </div>
+        </div>
+        {/* Row 2: nav links */}
+        <div className="max-w-6xl mx-auto px-2 flex gap-0.5 overflow-x-auto scrollbar-hide">
+          {NAV_LINKS.map(({ href, label }) => {
+            const isActive = pathname === href;
+            return (
+              <Link
+                key={href}
+                href={href}
+                className={[
+                  'flex-shrink-0 text-sm px-3 py-2.5 transition-colors border-b-2',
+                  isActive
+                    ? 'border-white text-white font-medium'
+                    : 'border-transparent text-gray-400 hover:text-white',
+                ].join(' ')}
               >
-                Salir
-              </button>
-            </div>
-          </div>
-          {/* Row 2: nav links */}
-          <div className="max-w-6xl mx-auto px-2 flex gap-0.5 overflow-x-auto scrollbar-hide">
-            {NAV_LINKS.map(({ href, label }) => {
-              const isActive = pathname === href;
-              return (
-                <Link
-                  key={href}
-                  href={href}
-                  className={[
-                    'flex-shrink-0 text-sm px-3 py-2.5 transition-colors border-b-2',
-                    isActive
-                      ? 'border-white text-white font-medium'
-                      : 'border-transparent text-gray-400 hover:text-white',
-                  ].join(' ')}
-                >
-                  {label}
-                </Link>
-              );
-            })}
-          </div>
-        </header>
+                {label}
+              </Link>
+            );
+          })}
+        </div>
+      </header>
 
-        <main className="max-w-6xl mx-auto px-4 py-8">{children}</main>
-      </div>
-    </AdminContext.Provider>
+      <main className="max-w-6xl mx-auto px-4 py-8">{children}</main>
+    </div>
   );
 }

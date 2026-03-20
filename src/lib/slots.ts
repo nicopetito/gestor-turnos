@@ -1,15 +1,15 @@
-import type { FixedBooking, FixedBookingSuspension, SlotInfo } from '@/types';
+import type { CourtClosure, FixedBooking, FixedBookingSuspension, SlotInfo } from '@/types';
 
 const OPEN_HOUR  = 8;   // 08:00 inclusive
-const CLOSE_HOUR = 23;  // 23:00 exclusive (last slot starts 22:30)
+const CLOSE_HOUR = 23;  // 23:00 — last valid slot is 22:00 (mín. 60 min)
 const BLOCK_MINUTES = 30;
 
-/** Returns every 30-min slot label from 08:00 to 22:30. */
+/** Returns every 30-min slot label from 08:00 to 22:00 (last slot that fits a 60-min booking). */
 export function generateTimeSlots(): string[] {
   const slots: string[] = [];
-  for (let h = OPEN_HOUR; h < CLOSE_HOUR; h++) {
-    slots.push(pad(h) + ':00');
-    slots.push(pad(h) + ':30');
+  const lastStartMin = CLOSE_HOUR * 60 - 60; // 22:00
+  for (let min = OPEN_HOUR * 60; min <= lastStartMin; min += BLOCK_MINUTES) {
+    slots.push(minutesToTime(min));
   }
   return slots;
 }
@@ -92,6 +92,24 @@ export function isFixedBookingSuspended(
 }
 
 /**
+ * Returns true if the 30-min slot starting at `time` falls within a court closure.
+ */
+export function isSlotUnderMaintenance(
+  time: string,
+  courtId: string | number,
+  date: string,
+  closures: CourtClosure[],
+): boolean {
+  const slotMin = timeToMinutes(time);
+  return closures.some((c) => {
+    if (String(c.court_id) !== String(courtId) || date < c.date_from || date > c.date_to) return false;
+    const cStart = timeToMinutes(c.start_time);
+    const cEnd   = timeToMinutes(c.end_time);
+    return slotMin >= cStart && slotMin < cEnd;
+  });
+}
+
+/**
  * Builds the full SlotInfo array for one court on one date.
  */
 export function buildCourtSlots(
@@ -107,9 +125,13 @@ export function buildCourtSlots(
     status: string;
   }>,
   suspensions: FixedBookingSuspension[] = [],
+  closures: CourtClosure[] = [],
 ): SlotInfo[] {
   const courtFixed = fixedBookings.filter((fb) => fb.court_id === courtId);
   return generateTimeSlots().map((time) => {
+    if (isSlotUnderMaintenance(time, courtId, date, closures)) {
+      return { time, courtId, date, status: 'maintenance' };
+    }
     const fixed = findFixedBooking(time, weekday, courtFixed);
     if (fixed && !isFixedBookingSuspended(fixed.id, date, suspensions)) {
       return { time, courtId, date, status: 'fixed', label: fixed.label };

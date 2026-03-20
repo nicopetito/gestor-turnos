@@ -1,6 +1,6 @@
 export type BookingStatus = 'confirmed' | 'cancelled' | 'late_cancelled';
 export type Duration = 60 | 90 | 120;
-export type SlotStatus = 'available' | 'booked' | 'fixed' | 'unavailable';
+export type SlotStatus = 'available' | 'booked' | 'fixed' | 'unavailable' | 'maintenance';
 
 // ---- DB row shapes ----
 
@@ -107,4 +107,16 @@ export interface CreateFixedBookingBody {
   start_time: string;
   duration_minutes: Duration;
   label?: string;
+}
+
+export interface CourtClosure {
+  id: string;
+  court_id: number;
+  date_from: string;  // "YYYY-MM-DD"
+  date_to: string;    // "YYYY-MM-DD"
+  start_time: string; // "HH:MM:SS"
+  end_time: string;   // "HH:MM:SS"
+  reason: string | null;
+  created_at?: string;
+  courts?: { name: string };
 }

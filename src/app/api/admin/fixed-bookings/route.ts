@@ -1,19 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabase } from '@/lib/supabase/server';
+import { validateAdminSession, unauthorizedResponse } from '@/lib/admin-auth';
 import { timeToMinutes } from '@/lib/slots';
 import type { CreateFixedBookingBody, Duration } from '@/types';
 
 const VALID_DURATIONS: Duration[] = [60, 90, 120];
 
 /**
- * GET /api/admin/fixed-bookings?adminKey=KEY
+ * GET /api/admin/fixed-bookings
  * Lists all fixed bookings.
  */
 export async function GET(request: NextRequest) {
-  const adminKey = new URL(request.url).searchParams.get('adminKey');
-  if (adminKey !== process.env.ADMIN_SECRET_KEY) {
-    return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
-  }
+  if (!validateAdminSession(request)) return unauthorizedResponse();
 
   const supabase = await createServerSupabase();
   const { data, error } = await supabase
@@ -32,11 +30,13 @@ export async function GET(request: NextRequest) {
 
 /**
  * POST /api/admin/fixed-bookings
- * Body: { adminKey, court_id, weekday, start_time, duration_minutes, label? }
+ * Body: { court_id, weekday, start_time, duration_minutes, label? }
  *
  * Creates a recurring fixed booking (class) for a court on a given weekday.
  */
 export async function POST(request: NextRequest) {
+  if (!validateAdminSession(request)) return unauthorizedResponse();
+
   let body: CreateFixedBookingBody;
   try {
     body = await request.json();
@@ -44,11 +44,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'JSON inválido' }, { status: 400 });
   }
 
-  const { adminKey, court_id, weekday, start_time, duration_minutes, label } = body;
-
-  if (adminKey !== process.env.ADMIN_SECRET_KEY) {
-    return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
-  }
+  const { court_id, weekday, start_time, duration_minutes, label } = body;
 
   if (!court_id || weekday === undefined || !start_time || !duration_minutes) {
     return NextResponse.json({ error: 'Faltan campos requeridos' }, { status: 400 });
@@ -106,16 +102,13 @@ export async function POST(request: NextRequest) {
 }
 
 /**
- * DELETE /api/admin/fixed-bookings?adminKey=KEY&id=ID
+ * DELETE /api/admin/fixed-bookings?id=ID
  */
 export async function DELETE(request: NextRequest) {
-  const { searchParams } = new URL(request.url);
-  const adminKey = searchParams.get('adminKey');
-  const id       = searchParams.get('id');
+  if (!validateAdminSession(request)) return unauthorizedResponse();
 
-  if (adminKey !== process.env.ADMIN_SECRET_KEY) {
-    return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
-  }
+  const { searchParams } = new URL(request.url);
+  const id = searchParams.get('id');
 
   if (!id) {
     return NextResponse.json({ error: 'El parámetro id es requerido' }, { status: 400 });

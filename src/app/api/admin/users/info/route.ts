@@ -1,17 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabase } from '@/lib/supabase/server';
+import { validateAdminSession, unauthorizedResponse } from '@/lib/admin-auth';
 
 /**
  * POST /api/admin/users/info
- * Body: { adminKey, phone }
+ * Body: { phone }
  * Returns user data by phone.
  */
 export async function POST(request: NextRequest) {
-  const { adminKey, phone } = await request.json();
+  if (!validateAdminSession(request)) return unauthorizedResponse();
 
-  if (adminKey !== process.env.ADMIN_SECRET_KEY) {
-    return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
-  }
+  const { phone } = await request.json();
 
   if (!phone?.trim()) {
     return NextResponse.json({ error: 'El campo phone es requerido' }, { status: 400 });

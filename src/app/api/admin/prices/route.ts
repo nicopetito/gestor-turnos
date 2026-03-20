@@ -1,18 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabase } from '@/lib/supabase/server';
-
-const ADMIN_KEY = process.env.ADMIN_SECRET_KEY ?? 'admin123';
-
-function unauthorized() {
-  return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
-}
+import { validateAdminSession, unauthorizedResponse } from '@/lib/admin-auth';
 
 /**
- * GET /api/admin/prices?adminKey=…
+ * GET /api/admin/prices
  */
 export async function GET(request: NextRequest) {
-  const adminKey = new URL(request.url).searchParams.get('adminKey');
-  if (adminKey !== ADMIN_KEY) return unauthorized();
+  if (!validateAdminSession(request)) return unauthorizedResponse();
 
   const supabase = await createServerSupabase();
 
@@ -29,11 +23,12 @@ export async function GET(request: NextRequest) {
 
 /**
  * PUT /api/admin/prices
- * Body: { adminKey, prices: [{ id, amount }], luzStartTime }
+ * Body: { prices: [{ id, amount }], luzStartTime }
  */
 export async function PUT(request: NextRequest) {
+  if (!validateAdminSession(request)) return unauthorizedResponse();
+
   let body: {
-    adminKey: string;
     prices: { id: number; amount: number }[];
     luzStartTime: string;
   };
@@ -43,8 +38,6 @@ export async function PUT(request: NextRequest) {
   } catch {
     return NextResponse.json({ error: 'JSON inválido' }, { status: 400 });
   }
-
-  if (body.adminKey !== ADMIN_KEY) return unauthorized();
 
   const supabase = await createServerSupabase();
 

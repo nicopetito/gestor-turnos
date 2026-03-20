@@ -4,6 +4,7 @@ import { createServerSupabase } from '@/lib/supabase/server';
 import { timeToMinutes, minutesToTime } from '@/lib/slots';
 import { notifyBookingConfirmed } from '@/lib/notifications';
 import { writeBookingToSheet } from '@/lib/sheets';
+import { validateAdminSession } from '@/lib/admin-auth';
 import type { CreateBookingBody, Duration } from '@/types';
 
 const VALID_DURATIONS: Duration[] = [60, 90, 120];
@@ -52,6 +53,8 @@ export async function GET(request: NextRequest) {
  * Creates a new booking with full validation.
  */
 export async function POST(request: NextRequest) {
+  const isAdmin = validateAdminSession(request);
+
   let body: CreateBookingBody;
   try {
     body = await request.json();
@@ -134,8 +137,8 @@ export async function POST(request: NextRequest) {
     user = { ...user, email: email.trim() };
   }
 
-  // --- Blocked user ---
-  if (user.blocked_until) {
+  // --- Blocked user (skipped for admin) ---
+  if (!isAdmin && user.blocked_until) {
     const blockedUntil = startOfDay(parseISO(user.blocked_until));
     if (bookingDate <= blockedUntil) {
       return NextResponse.json(
@@ -145,20 +148,22 @@ export async function POST(request: NextRequest) {
     }
   }
 
-  // --- One booking per user per day ---
-  const { data: existingForDay } = await supabase
-    .from('bookings')
-    .select('id')
-    .eq('user_id', user.id)
-    .eq('date', date)
-    .eq('status', 'confirmed')
-    .maybeSingle();
+  // --- One booking per user per day (skipped for admin) ---
+  if (!isAdmin) {
+    const { data: existingForDay } = await supabase
+      .from('bookings')
+      .select('id')
+      .eq('user_id', user.id)
+      .eq('date', date)
+      .eq('status', 'confirmed')
+      .maybeSingle();
 
-  if (existingForDay) {
-    return NextResponse.json(
-      { error: 'Ya tenés una reserva confirmada para ese día' },
-      { status: 409 },
-    );
+    if (existingForDay) {
+      return NextResponse.json(
+        { error: 'Ya tenés una reserva confirmada para ese día' },
+        { status: 409 },
+      );
+    }
   }
 
   // --- Fixed booking conflict (skip suspended ones) ---

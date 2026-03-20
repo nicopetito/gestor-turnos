@@ -1,16 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { parseISO, isValid } from 'date-fns';
 import { createServerSupabase } from '@/lib/supabase/server';
+import { validateAdminSession, unauthorizedResponse } from '@/lib/admin-auth';
 import type { BlockUserBody } from '@/types';
 
 /**
  * POST /api/admin/users/block
- * Body: { adminKey, phone, blocked_until }
+ * Body: { phone, blocked_until }
  *
  * Sets blocked_until on a user. Pass null to unblock.
- * Protected by a static admin key stored in ADMIN_SECRET_KEY env var.
  */
 export async function POST(request: NextRequest) {
+  if (!validateAdminSession(request)) return unauthorizedResponse();
+
   let body: BlockUserBody & { blocked_until: string | null };
   try {
     body = await request.json();
@@ -18,11 +20,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'JSON inválido' }, { status: 400 });
   }
 
-  const { adminKey, phone, blocked_until } = body;
-
-  if (adminKey !== process.env.ADMIN_SECRET_KEY) {
-    return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
-  }
+  const { phone, blocked_until } = body;
 
   if (!phone?.trim()) {
     return NextResponse.json({ error: 'El campo phone es requerido' }, { status: 400 });

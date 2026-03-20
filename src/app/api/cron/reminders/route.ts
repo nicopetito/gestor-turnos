@@ -1,60 +1,68 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { format, addDays, startOfDay } from 'date-fns';
 import { createServerSupabase } from '@/lib/supabase/server';
 import { notifyBookingReminder } from '@/lib/notifications';
-import { format, addDays } from 'date-fns';
 
 /**
  * GET /api/cron/reminders
- * Llamado por Vercel Cron todos los días a las 10:00 AM (ARG, UTC-3 → 13:00 UTC).
- * Envía un recordatorio por email a todos los turnos confirmados del día siguiente que tengan email.
+ *
+ * Envía recordatorios por email a todos los usuarios con reservas confirmadas
+ * para el día siguiente.
+ *
+ * Llamado por el cron de Vercel (ver vercel.json).
+ * Protegido con header: Authorization: Bearer CRON_SECRET
  */
-export async function GET(req: NextRequest) {
-  // Verificar que la llamada viene de Vercel Cron o de un admin manual
-  const authHeader = req.headers.get('authorization');
+export async function GET(request: NextRequest) {
+  const authHeader = request.headers.get('authorization');
   const cronSecret = process.env.CRON_SECRET;
 
-  if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
+  if (!cronSecret || authHeader !== `Bearer ${cronSecret}`) {
     return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
   }
 
-  const tomorrow    = format(addDays(new Date(), 1), 'yyyy-MM-dd');
-  const supabase    = await createServerSupabase();
+  const tomorrow = format(addDays(startOfDay(new Date()), 1), 'yyyy-MM-dd');
+
+  const supabase = await createServerSupabase();
 
   const { data: bookings, error } = await supabase
     .from('bookings')
-    .select('id, date, start_time, end_time, duration_minutes, users(name, email), courts(name)')
+    .select('*, users(name, email), courts(name)')
     .eq('date', tomorrow)
     .eq('status', 'confirmed');
 
   if (error) {
-    console.error('[cron/reminders] Supabase error:', error.message);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    console.error('[cron/reminders] Error al consultar bookings:', error);
+    return NextResponse.json({ error: 'Error al consultar reservas' }, { status: 500 });
   }
 
-  let sent    = 0;
-  let skipped = 0;
+  let sent = 0;
+  const errors: string[] = [];
 
-  for (const b of bookings ?? []) {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const user  = (b.users as any) as { name: string; email: string | null } | null;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const court = (b.courts as any) as { name: string } | null;
+  for (const booking of bookings ?? []) {
+    const user  = booking.users as { name: string; email: string | null } | null;
+    const court = booking.courts as { name: string } | null;
 
-    if (!user?.email) { skipped++; continue; }
+    if (!user?.email) continue;
 
-    await notifyBookingReminder({
-      name:            user.name,
-      email:           user.email,
-      date:            b.date,
-      courtName:       court?.name ?? 'Cancha',
-      startTime:       b.start_time.slice(0, 5),
-      endTime:         b.end_time.slice(0, 5),
-      durationMinutes: b.duration_minutes,
-    });
-
-    sent++;
+    try {
+      await notifyBookingReminder({
+        name:            user.name,
+        email:           user.email,
+        date:            booking.date,
+        courtName:       court?.name ?? `Cancha ${booking.court_id}`,
+        startTime:       booking.start_time.slice(0, 5),
+        endTime:         booking.end_time.slice(0, 5),
+        durationMinutes: booking.duration_minutes,
+      });
+      sent++;
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      console.error(`[cron/reminders] Error enviando a ${user.email}:`, msg);
+      errors.push(`${user.email}: ${msg}`);
+    }
   }
 
-  console.log(`[cron/reminders] ${tomorrow}: ${sent} enviados, ${skipped} sin email`);
-  return NextResponse.json({ date: tomorrow, sent, skipped });
+  console.log(`[cron/reminders] Recordatorios enviados: ${sent} / ${(bookings ?? []).length}`);
+
+  return NextResponse.json({ sent, errors, date: tomorrow });
 }

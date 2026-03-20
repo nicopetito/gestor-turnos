@@ -1,17 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabase } from '@/lib/supabase/server';
-
-const ADMIN_KEY = process.env.ADMIN_SECRET_KEY ?? 'admin123';
+import { validateAdminSession, unauthorizedResponse } from '@/lib/admin-auth';
 
 export async function GET(req: NextRequest) {
-  const { searchParams } = req.nextUrl;
-  const adminKey = searchParams.get('adminKey') ?? '';
-  const from     = searchParams.get('from');   // yyyy-MM-dd
-  const to       = searchParams.get('to');     // yyyy-MM-dd
+  if (!validateAdminSession(req)) return unauthorizedResponse();
 
-  if (adminKey !== ADMIN_KEY) {
-    return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
-  }
+  const { searchParams } = req.nextUrl;
+  const from = searchParams.get('from');  // yyyy-MM-dd
+  const to   = searchParams.get('to');   // yyyy-MM-dd
+
   if (!from || !to) {
     return NextResponse.json({ error: 'Parámetros from y to requeridos' }, { status: 400 });
   }

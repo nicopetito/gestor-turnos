@@ -47,6 +47,7 @@ export async function GET(request: NextRequest) {
     { data: fixedBookings,error: fixedErr        },
     { data: bookings,     error: bookingsErr     },
     { data: suspensions,  error: suspensionsErr  },
+    { data: closures,     error: closuresErr     },
   ] = await Promise.all([
     supabase.from('courts').select('id, name').order('id'),
     supabase.from('fixed_bookings').select('*'),
@@ -61,10 +62,15 @@ export async function GET(request: NextRequest) {
       .select('*')
       .lte('suspended_from', toStr)
       .gte('suspended_until', fromStr),
+    supabase
+      .from('court_closures')
+      .select('id, court_id, date_from, date_to, start_time, end_time, reason')
+      .lte('date_from', toStr)
+      .gte('date_to', fromStr),
   ]);
 
-  if (courtsErr || fixedErr || bookingsErr || suspensionsErr) {
-    console.error({ courtsErr, fixedErr, bookingsErr, suspensionsErr });
+  if (courtsErr || fixedErr || bookingsErr || suspensionsErr || closuresErr) {
+    console.error({ courtsErr, fixedErr, bookingsErr, suspensionsErr, closuresErr });
     return NextResponse.json({ error: 'Error al consultar la base de datos' }, { status: 500 });
   }
 
@@ -83,6 +89,7 @@ export async function GET(request: NextRequest) {
         fixedBookings!,
         bookings!,
         suspensions!,
+        closures!,
       );
       availability.push({ date: dateStr, courtId: court.id, courtName: court.name, slots });
     }

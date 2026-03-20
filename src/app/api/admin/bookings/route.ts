@@ -1,19 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabase } from '@/lib/supabase/server';
+import { validateAdminSession, unauthorizedResponse } from '@/lib/admin-auth';
 import { clearBookingFromSheet } from '@/lib/sheets';
 
 /**
- * GET /api/admin/bookings?adminKey=KEY&date=YYYY-MM-DD
+ * GET /api/admin/bookings?date=YYYY-MM-DD
  * Returns all bookings for a given date with user and court info.
  */
 export async function GET(request: NextRequest) {
-  const { searchParams } = new URL(request.url);
-  const adminKey = searchParams.get('adminKey');
-  const date     = searchParams.get('date');
+  if (!validateAdminSession(request)) return unauthorizedResponse();
 
-  if (adminKey !== process.env.ADMIN_SECRET_KEY) {
-    return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
-  }
+  const { searchParams } = new URL(request.url);
+  const date = searchParams.get('date');
 
   if (!date) {
     return NextResponse.json({ error: 'El parámetro date es requerido' }, { status: 400 });
@@ -35,21 +33,19 @@ export async function GET(request: NextRequest) {
 }
 
 /**
- * DELETE /api/admin/bookings/:id — cancel any booking as admin
- * Body: { adminKey, reason? }
+ * DELETE /api/admin/bookings — cancela una reserva como admin
+ * Body: { bookingId }
  */
 export async function DELETE(request: NextRequest) {
-  let body: { adminKey: string; bookingId: string };
+  if (!validateAdminSession(request)) return unauthorizedResponse();
+
+  let body: { bookingId: string };
   try {
     body = await request.json();
   } catch {
     return NextResponse.json({ error: 'JSON inválido' }, { status: 400 });
   }
-  const { adminKey, bookingId } = body;
-
-  if (adminKey !== process.env.ADMIN_SECRET_KEY) {
-    return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
-  }
+  const { bookingId } = body;
 
   const supabase = await createServerSupabase();
 

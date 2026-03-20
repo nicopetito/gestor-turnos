@@ -1,16 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { format, startOfDay } from 'date-fns';
 import { createServerSupabase } from '@/lib/supabase/server';
+import { validateAdminSession, unauthorizedResponse } from '@/lib/admin-auth';
 
 /**
- * GET /api/admin/fixed-bookings/suspensions?adminKey=KEY
+ * GET /api/admin/fixed-bookings/suspensions
  * Returns all active suspensions (suspended_until >= today).
  */
 export async function GET(request: NextRequest) {
-  const adminKey = new URL(request.url).searchParams.get('adminKey');
-  if (adminKey !== process.env.ADMIN_SECRET_KEY) {
-    return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
-  }
+  if (!validateAdminSession(request)) return unauthorizedResponse();
 
   const supabase = await createServerSupabase();
   const today    = format(startOfDay(new Date()), 'yyyy-MM-dd');
