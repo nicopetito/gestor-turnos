@@ -6,6 +6,7 @@ import Image from 'next/image';
 import DayNav from '@/components/DayNav';
 import CourtGrid from '@/components/CourtGrid';
 import BookingModal from '@/components/BookingModal';
+import { createClient } from '@/lib/supabase/client';
 import type { CourtAvailability, Duration, SlotInfo } from '@/types';
 
 const DAYS_AHEAD = 7;
@@ -39,6 +40,23 @@ export default function ReservarPage() {
 
   useEffect(() => {
     fetchAvailability(selectedDate);
+  }, [selectedDate, fetchAvailability]);
+
+  // Real-time: re-fetch cuando alguien reserva o cancela en la fecha seleccionada
+  useEffect(() => {
+    const supabase = createClient();
+    const dateStr = format(selectedDate, 'yyyy-MM-dd');
+
+    const channel = supabase
+      .channel(`bookings-${dateStr}`)
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'bookings', filter: `date=eq.${dateStr}` },
+        () => { fetchAvailability(selectedDate); },
+      )
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
   }, [selectedDate, fetchAvailability]);
 
   const handleSlotClick = (slot: SlotInfo, duration?: Duration) => {

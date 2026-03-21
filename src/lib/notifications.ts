@@ -81,14 +81,16 @@ const ctaButton = (href: string, label: string, color = '#2563eb') => `
 export async function notifyBookingConfirmed(params: {
   name: string;
   email: string;
+  phone: string;
   date: string;
   courtName: string;
   startTime: string;
   endTime: string;
   durationMinutes: number;
 }) {
-  const { name, email, date, courtName, startTime, endTime, durationMinutes } = params;
+  const { name, email, phone, date, courtName, startTime, endTime, durationMinutes } = params;
   const dateLabel = format(parseISO(date), "EEEE d 'de' MMMM yyyy", { locale: es });
+  const misReservasUrl = `${APP_URL()}/mis-reservas?phone=${encodeURIComponent(phone)}`;
 
   const html = base(`
     ${headerBar('#16a34a', '✅', 'Reserva confirmada')}
@@ -102,7 +104,7 @@ export async function notifyBookingConfirmed(params: {
         ${detailRow('Horario', `${startTime} – ${endTime}`)}
         ${detailRow('Duración', `${durationMinutes} minutos`)}
       </table>
-      ${ctaButton(`${APP_URL()}/mis-reservas`, 'Ver mis reservas')}
+      ${ctaButton(misReservasUrl, 'Ver / cancelar mi reserva')}
       <p style="margin-top:14px;font-size:12px;color:#9ca3af;text-align:center;">
         Podés cancelar hasta 24 h antes sin penalidad.
       </p>
@@ -119,14 +121,16 @@ export async function notifyBookingConfirmed(params: {
 export async function notifyBookingReminder(params: {
   name: string;
   email: string;
+  phone: string;
   date: string;
   courtName: string;
   startTime: string;
   endTime: string;
   durationMinutes: number;
 }) {
-  const { name, email, date, courtName, startTime, endTime, durationMinutes } = params;
+  const { name, email, phone, date, courtName, startTime, endTime, durationMinutes } = params;
   const dateLabel = format(parseISO(date), "EEEE d 'de' MMMM yyyy", { locale: es });
+  const misReservasUrl = `${APP_URL()}/mis-reservas?phone=${encodeURIComponent(phone)}`;
 
   const html = base(`
     ${headerBar('#2563eb', '⏰', 'Recordatorio de turno')}
@@ -140,7 +144,7 @@ export async function notifyBookingReminder(params: {
         ${detailRow('Horario', `${startTime} – ${endTime}`)}
         ${detailRow('Duración', `${durationMinutes} minutos`)}
       </table>
-      ${ctaButton(`${APP_URL()}/mis-reservas`, 'Ver mis reservas', '#2563eb')}
+      ${ctaButton(misReservasUrl, 'Ver / cancelar mi reserva', '#2563eb')}
       <p style="margin-top:14px;font-size:12px;color:#9ca3af;text-align:center;">
         Si necesitás cancelar, hacelo antes de las ${startTime} de hoy para evitar cancelación tardía.
       </p>

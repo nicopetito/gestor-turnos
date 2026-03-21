@@ -26,7 +26,7 @@ export async function GET(request: NextRequest) {
 
   const { data: bookings, error } = await supabase
     .from('bookings')
-    .select('*, users(name, email), courts(name)')
+    .select('*, users(name, email, phone), courts(name)')
     .eq('date', tomorrow)
     .eq('status', 'confirmed');
 
@@ -39,7 +39,7 @@ export async function GET(request: NextRequest) {
   const errors: string[] = [];
 
   for (const booking of bookings ?? []) {
-    const user  = booking.users as { name: string; email: string | null } | null;
+    const user  = booking.users as { name: string; email: string | null; phone: string } | null;
     const court = booking.courts as { name: string } | null;
 
     if (!user?.email) continue;
@@ -48,6 +48,7 @@ export async function GET(request: NextRequest) {
       await notifyBookingReminder({
         name:            user.name,
         email:           user.email,
+        phone:           user.phone,
         date:            booking.date,
         courtName:       court?.name ?? `Cancha ${booking.court_id}`,
         startTime:       booking.start_time.slice(0, 5),

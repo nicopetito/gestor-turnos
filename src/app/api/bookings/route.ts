@@ -259,6 +259,7 @@ export async function POST(request: NextRequest) {
     notifyBookingConfirmed({
       name:            user.name,
       email:           user.email,
+      phone:           phone.trim(),
       date,
       courtName,
       startTime:       start_time.slice(0, 5),
