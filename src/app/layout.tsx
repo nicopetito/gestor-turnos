@@ -4,6 +4,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import Script from 'next/script';
 import NavLink from '@/components/NavLink';
+import InstallPWA from '@/components/InstallPWA';
 import './globals.css';
 
 const inter = Inter({ subsets: ['latin'] });
@@ -52,7 +53,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <head>
         <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
       </head>
-      <body className={`${inter.className} bg-gray-50 min-h-screen flex flex-col`}>
+      <body className={`${inter.className} bg-gray-50 min-h-screen flex flex-col`} suppressHydrationWarning>
         <header className="bg-white border-b border-gray-200 sticky top-0 z-40 shadow-sm">
           <nav className="max-w-[1280px] mx-auto px-4 sm:px-8 lg:px-16 h-14 flex items-center justify-between">
             <Link
@@ -78,6 +79,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         </header>
 
         <div className="flex-1">{children}</div>
+
+        <InstallPWA />
 
         <Script
           id="register-sw"
