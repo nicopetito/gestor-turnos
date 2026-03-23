@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { format, parseISO } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { useRouter } from 'next/navigation';
@@ -40,6 +40,11 @@ export default function BookingModal({
   const [loading, setLoading]     = useState(false);
   const [error, setError]         = useState<string | null>(null);
   const [booking, setBooking]     = useState<Booking | null>(null);
+
+  useEffect(() => {
+    document.body.style.overflow = 'hidden';
+    return () => { document.body.style.overflow = ''; };
+  }, []);
 
   const courtSlots =
     allAvailability.find((a) => a.courtId === slot.courtId)?.slots ?? [];
