@@ -44,6 +44,21 @@ function NewBookingModal({
   const [error,        setError]        = useState<string | null>(null);
   const [success,      setSuccess]      = useState(false);
 
+  // Lock body scroll while modal is open
+  useEffect(() => {
+    if (!isOpen) return;
+    const scrollY = window.scrollY;
+    document.body.style.position = 'fixed';
+    document.body.style.top = `-${scrollY}px`;
+    document.body.style.width = '100%';
+    return () => {
+      document.body.style.position = '';
+      document.body.style.top = '';
+      document.body.style.width = '';
+      window.scrollTo(0, scrollY);
+    };
+  }, [isOpen]);
+
   // Load courts list once when modal opens
   useEffect(() => {
     if (!isOpen) return;

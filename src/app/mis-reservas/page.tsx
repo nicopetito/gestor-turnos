@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { differenceInHours, format, isPast, parseISO } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -78,6 +78,20 @@ export default function MisReservasPage() {
       setCancellingId(null);
     }
   };
+
+  useEffect(() => {
+    if (!confirmBooking && !cancelledBooking) return;
+    const scrollY = window.scrollY;
+    document.body.style.position = 'fixed';
+    document.body.style.top = `-${scrollY}px`;
+    document.body.style.width = '100%';
+    return () => {
+      document.body.style.position = '';
+      document.body.style.top = '';
+      document.body.style.width = '';
+      window.scrollTo(0, scrollY);
+    };
+  }, [confirmBooking, cancelledBooking]);
 
   const isUpcoming = (b: Booking) =>
     !isPast(parseISO(`${b.date}T${b.start_time}`));
