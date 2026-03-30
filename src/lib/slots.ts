@@ -4,11 +4,25 @@ const OPEN_HOUR  = 8;   // 08:00 inclusive
 const CLOSE_HOUR = 23;  // 23:00 — last valid slot is 22:00 (mín. 60 min)
 const BLOCK_MINUTES = 30;
 
-/** Returns every 30-min slot label from 08:00 to 22:00 (last slot that fits a 60-min booking). */
+/** Returns every 30-min slot label from 08:00 to 22:00 (for grid display). */
 export function generateTimeSlots(): string[] {
   const slots: string[] = [];
-  const lastStartMin = CLOSE_HOUR * 60 - 60; // 22:00
+  const lastStartMin = CLOSE_HOUR * 60 - 60; // 22:00 — last bookable start
   for (let min = OPEN_HOUR * 60; min <= lastStartMin; min += BLOCK_MINUTES) {
+    slots.push(minutesToTime(min));
+  }
+  return slots;
+}
+
+/**
+ * Returns every 30-min slot label from 08:00 to 22:30.
+ * Used internally to build the full slot list needed for duration validation
+ * (a 60-min booking at 22:00 requires the 22:30 block to exist).
+ */
+function generateAllSlots(): string[] {
+  const slots: string[] = [];
+  const lastBlockMin = CLOSE_HOUR * 60 - BLOCK_MINUTES; // 22:30
+  for (let min = OPEN_HOUR * 60; min <= lastBlockMin; min += BLOCK_MINUTES) {
     slots.push(minutesToTime(min));
   }
   return slots;
@@ -128,7 +142,7 @@ export function buildCourtSlots(
   closures: CourtClosure[] = [],
 ): SlotInfo[] {
   const courtFixed = fixedBookings.filter((fb) => fb.court_id === courtId);
-  return generateTimeSlots().map((time) => {
+  return generateAllSlots().map((time) => {
     if (isSlotUnderMaintenance(time, courtId, date, closures)) {
       return { time, courtId, date, status: 'maintenance' };
     }

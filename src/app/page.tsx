@@ -69,7 +69,7 @@ export default function HomePage() {
             className="flex justify-center mb-5"
           >
             <Image
-              src="/imagenes/escudo.png"
+              src="/imagenes/escudo-hero.png"
               alt="Escudo Club Atlético Olimpia Unidos"
               width={90}
               height={90}
@@ -121,7 +121,7 @@ export default function HomePage() {
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.4, duration: 0.4 }}
-            className="mt-10 grid grid-cols-3 gap-2 sm:gap-4"
+            className="mt-10 flex justify-center items-center gap-0 divide-x divide-white/20"
           >
             {[
               { title: '3 Canchas', desc: 'de tenis' },
@@ -130,14 +130,35 @@ export default function HomePage() {
             ].map(({ title, desc }) => (
               <div
                 key={title}
-                className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl p-3 sm:p-4 text-white"
+                className="px-5 sm:px-7 text-white text-center"
               >
                 <p className="font-bold text-sm sm:text-base">{title}</p>
-                <p className="text-xs text-white/65 mt-0.5">{desc}</p>
+                <p className="text-xs text-white/55 mt-0.5">{desc}</p>
               </div>
             ))}
           </motion.div>
         </div>
+
+        {/* Scroll indicator */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 1, duration: 0.5 }}
+          className="absolute bottom-8 right-6 flex flex-col items-center gap-1 text-white/60"
+        >
+          <span className="text-xs tracking-widest uppercase">Scroll</span>
+          <motion.svg
+            animate={{ y: [0, 6, 0] }}
+            transition={{ duration: 1.4, repeat: Infinity, ease: 'easeInOut' }}
+            className="w-5 h-5"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            strokeWidth={2}
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+          </motion.svg>
+        </motion.div>
       </section>
 
       {/* Cómo funciona */}
