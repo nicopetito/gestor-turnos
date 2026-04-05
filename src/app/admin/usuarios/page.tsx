@@ -162,7 +162,7 @@ export default function AdminUsuariosPage() {
           {!isBlocked ? (
             <div className="space-y-3">
               <p className="text-sm font-medium text-gray-700">Bloquear hasta:</p>
-              <div className="flex gap-2">
+              <div className="flex flex-col sm:flex-row gap-2">
                 <input
                   type="date"
                   value={blockDate}
@@ -216,47 +216,76 @@ export default function AdminUsuariosPage() {
           ) : bookings.length === 0 ? (
             <p className="px-6 py-8 text-sm text-gray-400 text-center">Este usuario no tiene reservas.</p>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="min-w-full text-sm">
-                <thead className="bg-gray-50 border-b border-gray-100">
-                  <tr>
-                    {['Fecha', 'Cancha', 'Horario', 'Estado'].map((h) => (
-                      <th
-                        key={h}
-                        className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider"
-                      >
-                        {h}
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-100">
-                  {bookings.map((b) => (
-                    <tr key={b.id} className="hover:bg-gray-50">
-                      <td className="px-6 py-3 font-medium text-gray-900">
-                        {new Date(b.date + 'T12:00:00').toLocaleDateString('es-AR', {
-                          weekday: 'short', day: 'numeric', month: 'short', year: 'numeric',
-                        })}
-                      </td>
-                      <td className="px-6 py-3 text-gray-700">
-                        {b.courts?.name ?? '—'}
-                      </td>
-                      <td className="px-6 py-3 font-mono text-gray-700">
-                        {b.start_time.slice(0, 5)} – {b.end_time.slice(0, 5)}
-                      </td>
-                      <td className="px-6 py-3">
-                        <span className={[
-                          'text-xs font-semibold px-2.5 py-1 rounded-full',
-                          STATUS_CHIP[b.status] ?? 'bg-gray-100 text-gray-600',
-                        ].join(' ')}>
-                          {STATUS_LABEL[b.status] ?? b.status}
-                        </span>
-                      </td>
+            <>
+              {/* Mobile: cards */}
+              <div className="md:hidden divide-y divide-gray-100">
+                {bookings.map((b) => (
+                  <div key={b.id} className="px-4 py-3">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <p className="text-sm font-medium text-gray-900">
+                          {new Date(b.date + 'T12:00:00').toLocaleDateString('es-AR', {
+                            weekday: 'short', day: 'numeric', month: 'short', year: 'numeric',
+                          })}
+                        </p>
+                        <p className="text-xs text-gray-500 mt-0.5">
+                          {b.courts?.name ?? '—'} · <span className="font-mono">{b.start_time.slice(0, 5)} – {b.end_time.slice(0, 5)}</span>
+                        </p>
+                      </div>
+                      <span className={[
+                        'flex-shrink-0 text-xs font-semibold px-2.5 py-1 rounded-full',
+                        STATUS_CHIP[b.status] ?? 'bg-gray-100 text-gray-600',
+                      ].join(' ')}>
+                        {STATUS_LABEL[b.status] ?? b.status}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Desktop: tabla */}
+              <div className="hidden md:block overflow-x-auto">
+                <table className="min-w-full text-sm">
+                  <thead className="bg-gray-50 border-b border-gray-100">
+                    <tr>
+                      {['Fecha', 'Cancha', 'Horario', 'Estado'].map((h) => (
+                        <th
+                          key={h}
+                          className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider"
+                        >
+                          {h}
+                        </th>
+                      ))}
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody className="divide-y divide-gray-100">
+                    {bookings.map((b) => (
+                      <tr key={b.id} className="hover:bg-gray-50">
+                        <td className="px-6 py-3 font-medium text-gray-900">
+                          {new Date(b.date + 'T12:00:00').toLocaleDateString('es-AR', {
+                            weekday: 'short', day: 'numeric', month: 'short', year: 'numeric',
+                          })}
+                        </td>
+                        <td className="px-6 py-3 text-gray-700">
+                          {b.courts?.name ?? '—'}
+                        </td>
+                        <td className="px-6 py-3 font-mono text-gray-700">
+                          {b.start_time.slice(0, 5)} – {b.end_time.slice(0, 5)}
+                        </td>
+                        <td className="px-6 py-3">
+                          <span className={[
+                            'text-xs font-semibold px-2.5 py-1 rounded-full',
+                            STATUS_CHIP[b.status] ?? 'bg-gray-100 text-gray-600',
+                          ].join(' ')}>
+                            {STATUS_LABEL[b.status] ?? b.status}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </>
           )}
         </div>
       )}

@@ -160,7 +160,7 @@ export default function AdminMantenimientoPage() {
           </div>
 
           {/* Rango de fechas */}
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Fecha desde</label>
               <input
@@ -187,7 +187,7 @@ export default function AdminMantenimientoPage() {
           </div>
 
           {/* Horario */}
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Hora inicio</label>
               <select
@@ -264,51 +264,84 @@ export default function AdminMantenimientoPage() {
         ) : closures.length === 0 ? (
           <p className="px-6 py-8 text-sm text-gray-400 text-center">No hay cierres programados.</p>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="min-w-full text-sm">
-              <thead className="bg-gray-50 border-b border-gray-100">
-                <tr>
-                  {['Período', 'Cancha', 'Horario', 'Motivo', ''].map((h) => (
-                    <th
-                      key={h}
-                      className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider"
+          <>
+            {/* Mobile: cards */}
+            <div className="md:hidden divide-y divide-gray-100">
+              {closures.map((c) => (
+                <div key={c.id} className="px-4 py-3">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium text-gray-900">
+                        {c.date_from === c.date_to
+                          ? fmtDate(c.date_from)
+                          : <>{fmtDate(c.date_from)} → {fmtDate(c.date_to)}</>
+                        }
+                      </p>
+                      <p className="text-xs text-gray-500 mt-0.5">
+                        {(c.courts as { name: string } | undefined)?.name ?? '—'} · <span className="font-mono">{c.start_time.slice(0, 5)} – {c.end_time.slice(0, 5)}</span>
+                      </p>
+                      {c.reason && (
+                        <p className="text-xs text-gray-400 mt-0.5 truncate">{c.reason}</p>
+                      )}
+                    </div>
+                    <button
+                      onClick={() => handleDelete(c.id)}
+                      className="flex-shrink-0 text-xs text-red-600 hover:text-red-800 font-medium transition-colors"
                     >
-                      {h}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-100">
-                {closures.map((c) => (
-                  <tr key={c.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-3 font-medium text-gray-900">
-                      {c.date_from === c.date_to
-                        ? fmtDate(c.date_from)
-                        : <>{fmtDate(c.date_from)} <span className="text-gray-400">→</span> {fmtDate(c.date_to)}</>
-                      }
-                    </td>
-                    <td className="px-6 py-3 text-gray-700">
-                      {(c.courts as { name: string } | undefined)?.name ?? '—'}
-                    </td>
-                    <td className="px-6 py-3 font-mono text-gray-700">
-                      {c.start_time.slice(0, 5)} – {c.end_time.slice(0, 5)}
-                    </td>
-                    <td className="px-6 py-3 text-gray-500 max-w-[200px] truncate">
-                      {c.reason ?? '—'}
-                    </td>
-                    <td className="px-6 py-3 text-right">
-                      <button
-                        onClick={() => handleDelete(c.id)}
-                        className="text-xs text-red-600 hover:text-red-800 font-medium transition-colors"
+                      Eliminar
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Desktop: tabla */}
+            <div className="hidden md:block overflow-x-auto">
+              <table className="min-w-full text-sm">
+                <thead className="bg-gray-50 border-b border-gray-100">
+                  <tr>
+                    {['Período', 'Cancha', 'Horario', 'Motivo', ''].map((h) => (
+                      <th
+                        key={h}
+                        className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider"
                       >
-                        Eliminar
-                      </button>
-                    </td>
+                        {h}
+                      </th>
+                    ))}
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody className="divide-y divide-gray-100">
+                  {closures.map((c) => (
+                    <tr key={c.id} className="hover:bg-gray-50">
+                      <td className="px-6 py-3 font-medium text-gray-900">
+                        {c.date_from === c.date_to
+                          ? fmtDate(c.date_from)
+                          : <>{fmtDate(c.date_from)} <span className="text-gray-400">→</span> {fmtDate(c.date_to)}</>
+                        }
+                      </td>
+                      <td className="px-6 py-3 text-gray-700">
+                        {(c.courts as { name: string } | undefined)?.name ?? '—'}
+                      </td>
+                      <td className="px-6 py-3 font-mono text-gray-700">
+                        {c.start_time.slice(0, 5)} – {c.end_time.slice(0, 5)}
+                      </td>
+                      <td className="px-6 py-3 text-gray-500 max-w-[200px] truncate">
+                        {c.reason ?? '—'}
+                      </td>
+                      <td className="px-6 py-3 text-right">
+                        <button
+                          onClick={() => handleDelete(c.id)}
+                          className="text-xs text-red-600 hover:text-red-800 font-medium transition-colors"
+                        >
+                          Eliminar
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </>
         )}
       </div>
     </div>

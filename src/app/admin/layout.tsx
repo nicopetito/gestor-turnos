@@ -6,12 +6,12 @@ import { usePathname } from 'next/navigation';
 
 // ---- Nav links ----
 const NAV_LINKS = [
-  { href: '/admin',               label: 'Reservas'      },
-  { href: '/admin/clases',        label: 'Clases fijas'  },
-  { href: '/admin/usuarios',      label: 'Usuarios'      },
-  { href: '/admin/mantenimiento', label: 'Mantenimiento' },
-  { href: '/admin/precios',       label: 'Precios'       },
-  { href: '/admin/estadisticas',  label: 'Estadísticas'  },
+  { href: '/admin',               label: 'Reservas',      short: 'Reservas'  },
+  { href: '/admin/clases',        label: 'Clases fijas',  short: 'Clases'    },
+  { href: '/admin/usuarios',      label: 'Usuarios',      short: 'Usuarios'  },
+  { href: '/admin/mantenimiento', label: 'Mantenimiento', short: 'Mantenim.' },
+  { href: '/admin/precios',       label: 'Precios',       short: 'Precios'   },
+  { href: '/admin/estadisticas',  label: 'Estadísticas',  short: 'Stats'     },
 ];
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
@@ -118,20 +118,21 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </div>
         {/* Row 2: nav links */}
         <div className="max-w-6xl mx-auto px-2 flex gap-0.5 overflow-x-auto scrollbar-hide">
-          {NAV_LINKS.map(({ href, label }) => {
+          {NAV_LINKS.map(({ href, label, short }) => {
             const isActive = pathname === href;
             return (
               <Link
                 key={href}
                 href={href}
                 className={[
-                  'flex-shrink-0 text-sm px-3 py-2.5 transition-colors border-b-2',
+                  'flex-shrink-0 text-sm px-2.5 sm:px-3 py-2.5 transition-colors border-b-2',
                   isActive
                     ? 'border-white text-white font-medium'
                     : 'border-transparent text-gray-400 hover:text-white',
                 ].join(' ')}
               >
-                {label}
+                <span className="sm:hidden">{short}</span>
+                <span className="hidden sm:inline">{label}</span>
               </Link>
             );
           })}

@@ -254,7 +254,7 @@ export default function AdminClasesPage() {
             />
           </div>
 
-          <div className="flex items-end">
+          <div className="flex items-end col-span-2 sm:col-span-1">
             <button
               type="submit"
               disabled={submitting}
