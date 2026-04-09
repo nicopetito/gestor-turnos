@@ -110,14 +110,17 @@ function generateTimeSlots(): string[] {
  * - Column A: time slots from 8:00 to 23:00
  * - Fixed bookings and closures for that date pre-filled (with colors)
  */
+/**
+ * Ensures a sheet tab exists. Returns the numeric sheetId of the tab (existing or newly created).
+ */
 async function ensureSheet(
   sheets: ReturnType<typeof google.sheets>,
   sheetName: string,
   dateStr: string,
-): Promise<void> {
+): Promise<number> {
   const meta = await sheets.spreadsheets.get({ spreadsheetId: SHEET_ID });
   const existing = meta.data.sheets?.find((s) => s.properties?.title === sheetName);
-  if (existing) return;
+  if (existing) return existing.properties!.sheetId!;
 
   // Create the tab — response contains the new sheet's numeric id
   const addRes = await sheets.spreadsheets.batchUpdate({
@@ -147,6 +150,8 @@ async function ensureSheet(
 
   // Pre-fill fixed bookings and closures (with colors)
   await prefillFixedAndClosures(sheets, sheetName, newSheetId, dateStr);
+
+  return newSheetId;
 }
 
 /**
@@ -474,7 +479,7 @@ export async function writeBookingToSheet(params: {
   const range = `'${sheetName}'!${col}${startRow}:${col}${endRow}`;
 
   const sheets = google.sheets({ version: 'v4', auth: getAuth() });
-  await ensureSheet(sheets, sheetName, params.date);
+  const sheetId = await ensureSheet(sheets, sheetName, params.date);
 
   await sheets.spreadsheets.values.update({
     spreadsheetId: SHEET_ID,
@@ -483,18 +488,13 @@ export async function writeBookingToSheet(params: {
     requestBody: { values: Array(numRows).fill([cellValue]) },
   });
 
-  // Get sheetId for color formatting
-  const meta = await sheets.spreadsheets.get({ spreadsheetId: SHEET_ID });
-  const sheetId = meta.data.sheets?.find((s) => s.properties?.title === sheetName)?.properties?.sheetId;
-  if (sheetId !== undefined && sheetId !== null) {
-    await applyBgColors(sheets, [{
-      sheetId,
-      colIndex: colIdx,
-      startRow: startRow - 1, // 0-based
-      numRows,
-      color: COLOR_ONCE,
-    }]);
-  }
+  await applyBgColors(sheets, [{
+    sheetId,
+    colIndex: colIdx,
+    startRow: startRow - 1, // 0-based
+    numRows,
+    color: COLOR_ONCE,
+  }]);
 }
 
 export async function clearBookingFromSheet(params: {
@@ -504,7 +504,8 @@ export async function clearBookingFromSheet(params: {
   court_name: string;
 }): Promise<void> {
   const col = COURT_COLUMNS[params.court_name];
-  if (!col) return;
+  const colIdx = COURT_COL_INDICES[params.court_name];
+  if (!col || colIdx === undefined) return;
 
   const sheetName = getSheetName(params.date);
   const startRow = timeToRow(params.start_time.slice(0, 5));
@@ -514,8 +515,18 @@ export async function clearBookingFromSheet(params: {
   const range = `'${sheetName}'!${col}${startRow}:${col}${endRow}`;
 
   const sheets = google.sheets({ version: 'v4', auth: getAuth() });
-  await sheets.spreadsheets.values.clear({
-    spreadsheetId: SHEET_ID,
-    range,
-  });
+  const meta = await sheets.spreadsheets.get({ spreadsheetId: SHEET_ID });
+  const sheetId = meta.data.sheets?.find((s) => s.properties?.title === sheetName)?.properties?.sheetId;
+
+  await sheets.spreadsheets.values.clear({ spreadsheetId: SHEET_ID, range });
+
+  if (sheetId !== undefined && sheetId !== null) {
+    await applyBgColors(sheets, [{
+      sheetId,
+      colIndex: colIdx,
+      startRow: startRow - 1,
+      numRows,
+      color: COLOR_CLEAR,
+    }]);
+  }
 }
