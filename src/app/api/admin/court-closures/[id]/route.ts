@@ -33,12 +33,22 @@ export async function DELETE(
   }
 
   if (closure) {
+    const courtName = (closure.courts as { name: string } | null)?.name ?? '';
+    console.log('[sheets] clearing closure:', {
+      date_from: closure.date_from,
+      date_to: closure.date_to,
+      court_name: courtName,
+      start_time: closure.start_time,
+      end_time: closure.end_time,
+    });
     clearClosureFromSheets({
       date_from: closure.date_from,
       date_to: closure.date_to,
-      court_name: (closure.courts as { name: string } | null)?.name ?? '',
+      court_name: courtName,
       start_time: closure.start_time,
       end_time: closure.end_time,
+    }).then(() => {
+      console.log('[sheets] clearClosureFromSheets OK');
     }).catch((err) => console.error('[sheets] clearClosureFromSheets error:', err));
   }
 

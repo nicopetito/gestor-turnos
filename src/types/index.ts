@@ -26,6 +26,7 @@ export interface FixedBooking {
   start_time: string; // "HH:MM:SS"
   duration_minutes: Duration;
   label: string;
+  phone?: string;
   created_at: string;
 }
 
@@ -107,6 +108,7 @@ export interface CreateFixedBookingBody {
   start_time: string;
   duration_minutes: Duration;
   label?: string;
+  phone?: string;
 }
 
 export interface CourtClosure {

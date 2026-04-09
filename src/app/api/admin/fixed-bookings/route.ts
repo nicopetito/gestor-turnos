@@ -45,7 +45,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'JSON inválido' }, { status: 400 });
   }
 
-  const { court_id, weekday, start_time, duration_minutes, label } = body;
+  const { court_id, weekday, start_time, duration_minutes, label, phone } = body;
 
   if (!court_id || weekday === undefined || !start_time || !duration_minutes) {
     return NextResponse.json({ error: 'Faltan campos requeridos' }, { status: 400 });
@@ -85,6 +85,7 @@ export async function POST(request: NextRequest) {
       start_time: start_time.length === 5 ? start_time + ':00' : start_time,
       duration_minutes,
       label: label?.trim() || 'Clase',
+      phone: phone?.trim() || null,
     })
     .select()
     .single();

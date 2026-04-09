@@ -33,6 +33,7 @@ interface FixedBookingRow {
   start_time: string;
   duration_minutes: Duration;
   label: string;
+  phone?: string;
   courts?: { name: string };
 }
 
@@ -57,6 +58,7 @@ export default function AdminClasesPage() {
     start_time:       '08:00',
     duration_minutes: 60 as Duration,
     label:            'Clase',
+    phone:            '',
   });
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError]   = useState<string | null>(null);
@@ -254,6 +256,17 @@ export default function AdminClasesPage() {
             />
           </div>
 
+          <div>
+            <label className="block text-xs font-medium text-gray-600 mb-1">Teléfono <span className="text-gray-400">(opcional)</span></label>
+            <input
+              type="text"
+              value={form.phone}
+              onChange={(e) => setForm((f) => ({ ...f, phone: e.target.value }))}
+              placeholder="11-1234-5678"
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900"
+            />
+          </div>
+
           <div className="flex items-end col-span-2 sm:col-span-1">
             <button
               type="submit"
@@ -310,6 +323,7 @@ export default function AdminClasesPage() {
                             {/* Cancha */}
                             <span className="text-xs text-gray-500">
                               {c.courts?.name ?? `Cancha ${c.court_id}`}
+                              {c.phone && <span className="ml-2 text-gray-400">· {c.phone}</span>}
                             </span>
                             {/* Badge suspensión */}
                             {isSuspended && (

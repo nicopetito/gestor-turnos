@@ -1,0 +1,1 @@
+ALTER TABLE fixed_bookings ADD COLUMN IF NOT EXISTS phone TEXT;
