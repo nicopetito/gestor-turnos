@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabase } from '@/lib/supabase/server';
 import { validateAdminSession, unauthorizedResponse } from '@/lib/admin-auth';
 import { format } from 'date-fns';
+import { writeClosureToSheets } from '@/lib/sheets';
 
 /**
  * GET /api/admin/court-closures
@@ -91,6 +92,16 @@ export async function POST(request: NextRequest) {
   if (error) {
     return NextResponse.json({ error: 'Error al crear el cierre' }, { status: 500 });
   }
+
+  // Update Google Sheets (non-blocking)
+  writeClosureToSheets({
+    date_from: dateFrom,
+    date_to: dateTo,
+    court_name: (closure.courts as { name: string } | null)?.name ?? '',
+    start_time: startTime,
+    end_time: endTime,
+    reason: reason ?? 'Mantenimiento',
+  }).catch((err) => console.error('[sheets] writeClosureToSheets error:', err));
 
   return NextResponse.json({ closure }, { status: 201 });
 }

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabase } from '@/lib/supabase/server';
 import { validateAdminSession, unauthorizedResponse } from '@/lib/admin-auth';
+import { clearClosureFromSheets } from '@/lib/sheets';
 
 /**
  * DELETE /api/admin/court-closures/[id]
@@ -15,6 +16,13 @@ export async function DELETE(
   const { id } = await params;
   const supabase = await createServerSupabase();
 
+  // Fetch before deleting to get slot info for sheets
+  const { data: closure } = await supabase
+    .from('court_closures')
+    .select('*, courts(name)')
+    .eq('id', id)
+    .single();
+
   const { error } = await supabase
     .from('court_closures')
     .delete()
@@ -22,6 +30,16 @@ export async function DELETE(
 
   if (error) {
     return NextResponse.json({ error: 'Error al eliminar el cierre' }, { status: 500 });
+  }
+
+  if (closure) {
+    clearClosureFromSheets({
+      date_from: closure.date_from,
+      date_to: closure.date_to,
+      court_name: (closure.courts as { name: string } | null)?.name ?? '',
+      start_time: closure.start_time,
+      end_time: closure.end_time,
+    }).catch((err) => console.error('[sheets] clearClosureFromSheets error:', err));
   }
 
   return NextResponse.json({ message: 'Cierre eliminado' });

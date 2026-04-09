@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabase } from '@/lib/supabase/server';
 import { validateAdminSession, unauthorizedResponse } from '@/lib/admin-auth';
 import { timeToMinutes } from '@/lib/slots';
+import { writeFixedBookingToSheets, clearFixedBookingFromSheets } from '@/lib/sheets';
 import type { CreateFixedBookingBody, Duration } from '@/types';
 
 const VALID_DURATIONS: Duration[] = [60, 90, 120];
@@ -98,6 +99,19 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Error al crear la clase fija' }, { status: 500 });
   }
 
+  // Fetch court name for sheets
+  const { data: court } = await supabase.from('courts').select('name').eq('id', court_id).single();
+  const courtName = court?.name ?? '';
+
+  // Update Google Sheets (non-blocking)
+  writeFixedBookingToSheets({
+    weekday,
+    court_name: courtName,
+    start_time: data.start_time,
+    duration_minutes,
+    label: data.label,
+  }).catch((err) => console.error('[sheets] writeFixedBookingToSheets error:', err));
+
   return NextResponse.json({ fixedBooking: data }, { status: 201 });
 }
 
@@ -115,10 +129,28 @@ export async function DELETE(request: NextRequest) {
   }
 
   const supabase = await createServerSupabase();
+
+  // Fetch before deleting to get court name and slot info for sheets
+  const { data: fb } = await supabase
+    .from('fixed_bookings')
+    .select('*, courts(name)')
+    .eq('id', id)
+    .single();
+
   const { error } = await supabase.from('fixed_bookings').delete().eq('id', id);
 
   if (error) {
     return NextResponse.json({ error: 'Error al eliminar la clase fija' }, { status: 500 });
+  }
+
+  if (fb) {
+    const courtName = (fb.courts as { name: string } | null)?.name ?? '';
+    clearFixedBookingFromSheets({
+      weekday: fb.weekday,
+      court_name: courtName,
+      start_time: fb.start_time,
+      duration_minutes: fb.duration_minutes,
+    }).catch((err) => console.error('[sheets] clearFixedBookingFromSheets error:', err));
   }
 
   return NextResponse.json({ message: 'Clase fija eliminada' });
