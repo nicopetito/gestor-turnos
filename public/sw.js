@@ -1,4 +1,4 @@
-const CACHE_NAME = 'once-unidos-v1';
+const CACHE_NAME = 'once-unidos-v2';
 const SHELL_URLS = ['/', '/reservar', '/mis-reservas', '/precios'];
 
 // Install: pre-cache the app shell
